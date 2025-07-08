@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tree {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  people      Person[]
+  relationships Relationship[]
+  rootPersonId String?
+}
+
+model Person {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  birthDate   String?
+  deathDate   String?
+  birthPlace  String?
+  occupation  String?
+  notes       String?
+  gender      Gender?
+  photo       String?
+  nickname    String?
+  currentPlace String?
+  facebookUrl  String?
+  treeId      String
+  tree        Tree     @relation(fields: [treeId], references: [id])
+  relationshipsFrom Relationship[] @relation("RelationshipFrom")
+  relationshipsTo   Relationship[] @relation("RelationshipTo")
+  documents         Document[]
+}
+
+model Relationship {
+  id           String           @id @default(cuid())
+  type         RelationshipType
+  fromPersonId String
+  toPersonId   String
+  treeId       String
+  tree         Tree             @relation(fields: [treeId], references: [id])
+  fromPerson   Person           @relation("RelationshipFrom", fields: [fromPersonId], references: [id])
+  toPerson     Person           @relation("RelationshipTo", fields: [toPersonId], references: [id])
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum RelationshipType {
+  parent_child
+  spouse
+}
+
+model Document {
+  id        String @id @default(cuid())
+  name      String
+  url       String
+  personId  String
+  person    Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
