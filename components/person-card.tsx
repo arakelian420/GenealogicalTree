@@ -69,7 +69,7 @@ export default function PersonCard({
 
   return (
     <Card
-      className={`w-48 cursor-pointer transition-all hover:shadow-md ${
+      className={`w-full cursor-pointer transition-all hover:shadow-md ${
         isSelected ? "ring-2 ring-blue-500" : ""
       } ${color}`}
       onClick={onClick}

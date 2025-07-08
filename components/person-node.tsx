@@ -57,25 +57,6 @@ export default function PersonNode({
           </div>
         )}
       </div>
-      {children.length > 0 && (
-        <div className="flex flex-col items-center">
-          <div className="w-0.5 h-8 bg-gray-400" />
-          <div className="flex items-start gap-8">
-            {children.map((childNode) => (
-              <PersonNode
-                key={childNode.person.id}
-                node={childNode}
-                displaySettings={displaySettings}
-                selectedPerson={selectedPerson}
-                onSelectPerson={onSelectPerson}
-                onEditPerson={onEditPerson}
-                onDeletePerson={onDeletePerson}
-                hasParentConnector={true}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

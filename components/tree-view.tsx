@@ -12,7 +12,7 @@ import { buildTree, HierarchyNode } from "@/lib/tree-builder";
 
 const NODE_WIDTH = 200;
 const H_SPACING = 50;
-const V_SPACING = 250;
+const V_SPACING = 450;
 
 interface TreeViewProps {
   tree: Tree & { people: Person[]; relationships: Relationship[] };
@@ -185,7 +185,7 @@ export default function TreeView({
     const nodes: React.ReactNode[] = [];
     nodes.push(
       <g key={node.person.id}>
-        <foreignObject x={node.x} y={node.y} width={NODE_WIDTH} height={200}>
+        <foreignObject x={node.x} y={node.y} width={NODE_WIDTH} height={400}>
           <PersonNode
             node={node}
             displaySettings={displaySettings}
@@ -200,7 +200,7 @@ export default function TreeView({
             x={node.spouse.x}
             y={node.spouse.y}
             width={NODE_WIDTH}
-            height={200}
+            height={400}
           >
             <PersonNode
               node={{
@@ -315,7 +315,7 @@ export default function TreeView({
     if (!node) return 0;
     const childrenMaxY =
       node.children.length > 0 ? Math.max(...node.children.map(getMaxY)) : 0;
-    return Math.max(node.y + 200, childrenMaxY);
+    return Math.max(node.y + 400, childrenMaxY);
   };
 
   const totalWidth = Math.max(...positionedTrees.map(getMaxX)) + H_SPACING;
