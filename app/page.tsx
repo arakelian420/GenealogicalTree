@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, TreePine, Users, Calendar, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { type Tree } from "@prisma/client";
+import { type Tree, type Person, type Relationship } from "@prisma/client";
 
 export default function Dashboard() {
   const [trees, setTrees] = useState<
-    (Tree & { people: any[]; relationships: any[] })[]
+    (Tree & { people: Person[]; relationships: Relationship[] })[]
   >([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTreeName, setNewTreeName] = useState("");

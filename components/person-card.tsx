@@ -5,6 +5,7 @@ import type { Person } from "@prisma/client";
 import type { DisplaySettings } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { Edit, Trash2, User, Mars, Venus, Facebook } from "lucide-react";
 
 interface Document {
@@ -77,9 +78,11 @@ export default function PersonCard({
       <CardContent className="p-3">
         <div className="relative">
           {displaySettings.showPhotos && person.photo ? (
-            <img
+            <Image
               src={person.photo}
               alt={`${person.firstName} ${person.lastName}`}
+              width={200}
+              height={128}
               className="w-full h-32 object-cover rounded-t-md"
             />
           ) : (

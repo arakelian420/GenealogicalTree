@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Tree, Person, Relationship, Gender } from "@prisma/client";
+import type {
+  Tree,
+  Person as PrismaPerson,
+  Relationship,
+  Gender,
+} from "@prisma/client";
+
+type Person = PrismaPerson & {
+  x?: number | null;
+  y?: number | null;
+  width?: number | null;
+  height?: number | null;
+};
 
 interface Document {
   id: string;
@@ -307,9 +320,11 @@ export default function PersonForm({
             <Label htmlFor="photo">Photo</Label>
             <Input id="photo" type="file" onChange={handlePhotoUpload} />
             {formData.photo && (
-              <img
+              <Image
                 src={formData.photo}
                 alt="Preview"
+                width={96}
+                height={96}
                 className="mt-2 w-24 h-24 rounded-full object-cover"
               />
             )}
@@ -320,7 +335,7 @@ export default function PersonForm({
             <Select
               value={formData.gender}
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, gender: value as any }))
+                setFormData((prev) => ({ ...prev, gender: value as Gender }))
               }
             >
               <SelectTrigger>

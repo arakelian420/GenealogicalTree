@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ReactFlowProvider } from "reactflow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Settings, Plus, Users, Printer, Save } from "lucide-react";
+import { ArrowLeft, Settings, Plus, Users, Save } from "lucide-react";
 import Link from "next/link";
 import type { Tree, Person, Relationship } from "@prisma/client";
 import type { DisplaySettings } from "@/lib/types";
@@ -31,14 +32,7 @@ export default function TreePage() {
   });
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-
-  useEffect(() => {
-    if (treeId) {
-      fetchTree();
-    }
-  }, [treeId]);
-
-  const fetchTree = async () => {
+  const fetchTree = useCallback(async () => {
     const response = await fetch(`/api/tree/${treeId}`);
     if (response.ok) {
       const data = await response.json();
@@ -46,36 +40,13 @@ export default function TreePage() {
     } else {
       router.push("/");
     }
-  };
+  }, [treeId, router]);
 
-  const updateTree = async (
-    updatedData: Partial<
-      Tree & { people: Person[]; relationships: Relationship[] }
-    >
-  ) => {
-    if (!tree) return;
-
-    // Optimistically update the local state
-    setTree((prevTree) => {
-      if (!prevTree) return null;
-      return { ...prevTree, ...updatedData };
-    });
-
-    const response = await fetch(`/api/tree/${tree.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData),
-    });
-
-    if (!response.ok) {
-      // If the API call fails, revert to the original state
+  useEffect(() => {
+    if (treeId) {
       fetchTree();
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
+  }, [treeId, fetchTree]);
 
   const handleSave = () => {
     if (!tree) return;
@@ -146,10 +117,6 @@ export default function TreePage() {
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
               <Button variant="outline" size="sm" onClick={handleSave}>
                 <Save className="h-4 w-4 mr-2" />
                 Save
@@ -177,11 +144,15 @@ export default function TreePage() {
             </CardContent>
           </Card>
         ) : (
-          <TreeView
-            tree={tree}
-            displaySettings={displaySettings}
-            onUpdateTree={fetchTree}
-          />
+          <div className="print-container">
+            <ReactFlowProvider>
+              <TreeView
+                tree={tree}
+                displaySettings={displaySettings}
+                onUpdateTree={fetchTree}
+              />
+            </ReactFlowProvider>
+          </div>
         )}
       </main>
 

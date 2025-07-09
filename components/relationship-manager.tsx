@@ -130,7 +130,9 @@ export default function RelationshipManager({
                 <Label>Relationship Type</Label>
                 <Select
                   value={newRelationType}
-                  onValueChange={(value: any) => setNewRelationType(value)}
+                  onValueChange={(value) =>
+                    setNewRelationType(value as RelationshipType)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />

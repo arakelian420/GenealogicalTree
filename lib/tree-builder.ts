@@ -5,8 +5,8 @@ export interface HierarchyNode {
   parents: HierarchyNode[];
   spouse: HierarchyNode | null;
   children: HierarchyNode[];
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
   modifier: number;
   width: number;
 }
@@ -14,13 +14,9 @@ export interface HierarchyNode {
 export function buildTree(
   people: Person[],
   relationships: Relationship[],
-  rootPersonId: string,
-  processedIds: Set<string>
+  rootPersonId: string
 ): HierarchyNode | null {
   const peopleMap = new Map(people.map((p) => [p.id, p]));
-  const relationshipsMap = new Map(
-    relationships.map((r) => [r.fromPersonId, r])
-  );
 
   function getSpouse(personId: string): Person | null {
     for (const rel of relationships) {
@@ -65,7 +61,6 @@ export function buildTree(
       return null;
     }
     processedIds.add(person.id);
-
     const spousePerson = getSpouse(person.id);
     if (spousePerson) {
       processedIds.add(spousePerson.id);
@@ -87,8 +82,6 @@ export function buildTree(
           parents: [],
           spouse: null,
           children: [],
-          x: 0,
-          y: 0,
           modifier: 0,
           width: 0,
         }
@@ -99,8 +92,6 @@ export function buildTree(
       parents: parentNodes,
       spouse: spouseNode,
       children: childNodes,
-      x: 0,
-      y: 0,
       modifier: 0,
       width: 0,
     };
@@ -112,8 +103,6 @@ export function buildTree(
       parents: [],
       spouse: null,
       children: [],
-      x: 0,
-      y: 0,
       modifier: 0,
       width: 0,
     };

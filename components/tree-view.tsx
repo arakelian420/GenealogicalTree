@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -10,22 +16,13 @@ import ReactFlow, {
   type Node,
   type Edge,
   type Connection,
+  useReactFlow,
+  ControlButton,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import type {
-  Tree,
-  Person as PrismaPerson,
-  Relationship,
-  RelationshipType,
-} from "@prisma/client";
+import type { Tree, Relationship, RelationshipType } from "@prisma/client";
 
-type Person = PrismaPerson & {
-  x: number | null;
-  y: number | null;
-  width: number | null;
-  height: number | null;
-};
-import type { DisplaySettings } from "@/lib/types";
+import type { DisplaySettings, Person } from "@/lib/types";
 import { buildTree, HierarchyNode } from "@/lib/tree-builder";
 import DraggablePersonNode from "./draggable-person-node";
 import PersonForm from "./person-form";
@@ -53,24 +50,29 @@ export default function TreeView({
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
+  const { fitView } = useReactFlow();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const nodeTypes = useMemo(
     () => ({ draggablePerson: DraggablePersonNode }),
     []
   );
 
-  const deletePerson = async (personId: string) => {
-    const response = await fetch(`/api/person/${personId}`, {
-      method: "DELETE",
-    });
+  const deletePerson = useCallback(
+    async (personId: string) => {
+      const response = await fetch(`/api/person/${personId}`, {
+        method: "DELETE",
+      });
 
-    if (response.ok) {
-      onUpdateTree();
-      if (selectedPerson?.id === personId) {
-        setSelectedPerson(null);
+      if (response.ok) {
+        onUpdateTree();
+        if (selectedPerson?.id === personId) {
+          setSelectedPerson(null);
+        }
       }
-    }
-  };
+    },
+    [onUpdateTree, selectedPerson]
+  );
 
   const onNodeResizeEnd = async (
     personId: string,
@@ -86,6 +88,36 @@ export default function TreeView({
       }),
     });
   };
+
+  const layoutTree = useCallback(
+    (
+      node: HierarchyNode,
+      x: number,
+      y: number
+    ): {
+      maxX: number;
+    } => {
+      const person = node.person as Person;
+      const spouse = node.spouse?.person as Person | undefined;
+      node.x = person.x ?? x;
+      node.y = person.y ?? y;
+      let currentX = node.x;
+      if (node.spouse) {
+        node.spouse.x = spouse?.x ?? node.x + NODE_WIDTH + H_SPACING;
+        node.spouse.y = spouse?.y ?? node.y;
+        currentX = node.spouse.x;
+      }
+      let childX = x;
+      for (const child of node.children) {
+        const { maxX: childMaxX } = layoutTree(child, childX, y + V_SPACING);
+        childX = childMaxX + H_SPACING;
+      }
+      return {
+        maxX: Math.max(currentX, childX),
+      };
+    },
+    []
+  );
 
   useEffect(() => {
     if (tree.people.length === 0) {
@@ -158,12 +190,11 @@ export default function TreeView({
         const familySubTree = buildTree(
           tree.people,
           tree.relationships,
-          rootPerson.id,
-          processedIds
+          rootPerson.id
         );
 
         if (familySubTree) {
-          const { maxX } = layoutTree(familySubTree, 0, yOffset);
+          layoutTree(familySubTree, 0, yOffset);
           yOffset += V_SPACING;
           const { nodes: newNodes, edges: newEdges } = convertToReactFlow(
             familySubTree,
@@ -184,7 +215,16 @@ export default function TreeView({
     }
     setNodes(reactFlowNodes);
     setEdges(reactFlowEdges);
-  }, [tree, displaySettings, selectedPerson, onUpdateTree, setNodes, setEdges]);
+  }, [
+    tree,
+    displaySettings,
+    selectedPerson,
+    onUpdateTree,
+    setNodes,
+    setEdges,
+    deletePerson,
+    layoutTree,
+  ]);
 
   const onConnect = (connection: Connection) => {
     setNewConnection(connection);
@@ -295,46 +335,27 @@ export default function TreeView({
     });
   };
 
-  function layoutTree(
-    node: HierarchyNode,
-    x: number,
-    y: number
-  ): { maxX: number } {
-    const person = node.person as Person;
-    const spouse = node.spouse?.person as Person | undefined;
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
 
-    if (person.x !== null && person.y !== null) {
-      node.x = person.x;
-      node.y = person.y;
-    } else {
-      node.x = x;
-      node.y = y;
-    }
+  useEffect(() => {
+    const onBeforePrint = () => {
+      fitView({ padding: 0.1 });
+    };
 
-    let currentX = node.x;
+    window.addEventListener("beforeprint", onBeforePrint);
 
-    if (node.spouse) {
-      if (spouse?.x !== null && spouse?.y !== null) {
-        node.spouse.x = spouse!.x!;
-        node.spouse.y = spouse!.y!;
-      } else {
-        node.spouse.x = node.x + NODE_WIDTH + H_SPACING;
-        node.spouse.y = node.y;
-      }
-      currentX = node.spouse.x;
-    }
-
-    let childX = x;
-    for (const child of node.children) {
-      const { maxX: childMaxX } = layoutTree(child, childX, y + V_SPACING);
-      childX = childMaxX + H_SPACING;
-    }
-
-    return { maxX: Math.max(currentX, childX) };
-  }
+    return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+    };
+  }, [fitView]);
 
   return (
-    <div className="w-full h-[800px]">
+    <div
+      ref={containerRef}
+      className="w-full h-[800px] print:w-screen print:h-screen"
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -347,8 +368,12 @@ export default function TreeView({
         fitView
       >
         <Background />
-        <Controls />
-        <MiniMap />
+        <Controls className="print:hidden">
+          <ControlButton onClick={handlePrint} title="Print">
+            🖨️
+          </ControlButton>
+        </Controls>
+        <MiniMap className="print:hidden" />
       </ReactFlow>
 
       <RelationshipModal
@@ -358,7 +383,7 @@ export default function TreeView({
       />
 
       {selectedPerson && (
-        <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg p-6">
+        <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg p-6 print:hidden">
           <h3 className="text-lg font-semibold mb-4">Person Details</h3>
           <div className="space-y-3">
             <div>
@@ -453,7 +478,7 @@ function convertToReactFlow(
     nodes.push({
       id: node.person.id,
       type: "draggablePerson",
-      position: { x: node.x, y: node.y },
+      position: { x: node.x ?? 0, y: node.y ?? 0 },
       style: {
         width: (node.person as Person).width || "auto",
         height: (node.person as Person).height || "auto",
@@ -476,7 +501,7 @@ function convertToReactFlow(
       nodes.push({
         id: node.spouse.person.id,
         type: "draggablePerson",
-        position: { x: node.spouse.x, y: node.spouse.y },
+        position: { x: node.spouse.x ?? 0, y: node.spouse.y ?? 0 },
         style: {
           width: (node.spouse.person as Person).width || "auto",
           height: (node.spouse.person as Person).height || "auto",
@@ -506,7 +531,7 @@ function convertToReactFlow(
         node.person.id === relationship.fromPersonId ? node : node.spouse;
       const toNode =
         node.person.id === relationship.toPersonId ? node : node.spouse;
-      const fromNodeIsLeft = fromNode.x < toNode.x;
+      const fromNodeIsLeft = (fromNode.x ?? 0) < (toNode.x ?? 0);
       edges.push({
         id: relationship.id,
         source: relationship.fromPersonId,

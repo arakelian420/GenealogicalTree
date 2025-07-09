@@ -1,3 +1,5 @@
+import type { Person as PrismaPerson } from "@prisma/client";
+
 export interface DisplaySettings {
   showBirthDate: boolean;
   showDeathDate: boolean;
@@ -7,3 +9,10 @@ export interface DisplaySettings {
   treeLayout: "vertical" | "horizontal";
   compactMode: boolean;
 }
+
+export type Person = PrismaPerson & {
+  x?: number | null;
+  y?: number | null;
+  width?: number | null;
+  height?: number | null;
+};
