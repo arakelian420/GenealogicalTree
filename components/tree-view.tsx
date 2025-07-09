@@ -115,6 +115,10 @@ export default function TreeView({
           (person as Person).x !== null && (person as Person).y !== null
             ? { x: (person as Person).x!, y: (person as Person).y! }
             : { x, y },
+        style: {
+          width: person.width || "auto",
+          height: person.height || "auto",
+        },
         data: {
           person,
           displaySettings,
@@ -404,6 +408,10 @@ function convertToReactFlow(
       id: node.spouse.person.id,
       type: "draggablePerson",
       position: { x: node.spouse.x, y: node.spouse.y },
+      style: {
+        width: (node.spouse.person as Person).width || "auto",
+        height: (node.spouse.person as Person).height || "auto",
+      },
       data: {
         person: node.spouse.person,
         displaySettings,
@@ -411,6 +419,7 @@ function convertToReactFlow(
         onEditPerson,
         onDeletePerson,
         selectedPerson,
+        onResizeEnd,
       },
     });
     const relationship = relationships.find(
