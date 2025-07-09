@@ -70,13 +70,13 @@ export default function PersonCard({
 
   return (
     <Card
-      className={`w-full cursor-pointer transition-all hover:shadow-md ${
+      className={`w-full h-full cursor-pointer transition-all hover:shadow-md ${
         isSelected ? "ring-2 ring-blue-500" : ""
       } ${color}`}
       onClick={onClick}
     >
-      <CardContent className="p-3">
-        <div className="relative">
+      <CardContent className="p-3 h-full flex flex-col">
+        <div className="relative flex-grow">
           {displaySettings.showPhotos && person.photo ? (
             <Image
               src={person.photo}

@@ -22,8 +22,16 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   const { id } = await context.params;
-  await prisma.person.delete({
-    where: { id },
+  await prisma.$transaction(async (tx) => {
+    await tx.relationship.deleteMany({
+      where: {
+        OR: [{ fromPersonId: id }, { toPersonId: id }],
+      },
+    });
+
+    await tx.person.delete({
+      where: { id },
+    });
   });
   return new NextResponse(null, { status: 204 });
 }

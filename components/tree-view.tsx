@@ -19,6 +19,7 @@ import ReactFlow, {
   useReactFlow,
   ControlButton,
 } from "reactflow";
+import { X } from "lucide-react";
 import "reactflow/dist/style.css";
 import type { Tree, Relationship, RelationshipType } from "@prisma/client";
 
@@ -60,14 +61,22 @@ export default function TreeView({
 
   const deletePerson = useCallback(
     async (personId: string) => {
-      const response = await fetch(`/api/person/${personId}`, {
-        method: "DELETE",
-      });
+      if (window.confirm("Are you sure you want to delete this person?")) {
+        try {
+          const response = await fetch(`/api/person/${personId}`, {
+            method: "DELETE",
+          });
 
-      if (response.ok) {
-        onUpdateTree();
-        if (selectedPerson?.id === personId) {
-          setSelectedPerson(null);
+          if (response.ok) {
+            onUpdateTree();
+            if (selectedPerson?.id === personId) {
+              setSelectedPerson(null);
+            }
+          } else {
+            console.error("Failed to delete person:", await response.text());
+          }
+        } catch (error) {
+          console.error("Error deleting person:", error);
         }
       }
     },
@@ -154,10 +163,9 @@ export default function TreeView({
         data: {
           person,
           displaySettings,
-          onSelectPerson: setSelectedPerson,
+          onSelectPerson: handleSelectPerson,
           onEditPerson: setEditingPerson,
           onDeletePerson: deletePerson,
-          selectedPerson,
           onResizeEnd: onNodeResizeEnd,
         },
       });
@@ -199,8 +207,7 @@ export default function TreeView({
           const { nodes: newNodes, edges: newEdges } = convertToReactFlow(
             familySubTree,
             displaySettings,
-            selectedPerson,
-            setSelectedPerson,
+            handleSelectPerson,
             setEditingPerson,
             deletePerson,
             tree.relationships,
@@ -225,6 +232,23 @@ export default function TreeView({
     deletePerson,
     layoutTree,
   ]);
+
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        selected: node.id === selectedPerson?.id,
+      }))
+    );
+  }, [selectedPerson, setNodes]);
+
+  const handleSelectPerson = (person: Person) => {
+    if (selectedPerson?.id === person.id) {
+      setSelectedPerson(null);
+    } else {
+      setSelectedPerson(person);
+    }
+  };
 
   const onConnect = (connection: Connection) => {
     setNewConnection(connection);
@@ -366,6 +390,7 @@ export default function TreeView({
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
+        onPaneClick={() => setSelectedPerson(null)}
       >
         <Background />
         <Controls className="print:hidden">
@@ -384,14 +409,26 @@ export default function TreeView({
 
       {selectedPerson && (
         <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg p-6 print:hidden">
-          <h3 className="text-lg font-semibold mb-4">Person Details</h3>
-          <div className="space-y-3">
+          <div className="flex justify-between items-start">
             <div>
-              <span className="font-medium">Name:</span>
-              <p>
-                {selectedPerson.firstName} {selectedPerson.lastName}
-              </p>
+              <h3 className="text-lg font-semibold mb-4">Person Details</h3>
+              <div className="space-y-3">
+                <div>
+                  <span className="font-medium">Name:</span>
+                  <p>
+                    {selectedPerson.firstName} {selectedPerson.lastName}
+                  </p>
+                </div>
+              </div>
             </div>
+            <button
+              onClick={() => setSelectedPerson(null)}
+              className="p-1 -mt-2 -mr-2 rounded-full hover:bg-gray-200"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="space-y-3">
             {selectedPerson.birthDate && (
               <div>
                 <span className="font-medium">Birth Date:</span>
@@ -462,7 +499,6 @@ export default function TreeView({
 function convertToReactFlow(
   node: HierarchyNode,
   displaySettings: DisplaySettings,
-  selectedPerson: Person | null,
   onSelectPerson: (person: Person) => void,
   onEditPerson: (person: Person) => void,
   onDeletePerson: (personId: string) => void,
@@ -489,7 +525,6 @@ function convertToReactFlow(
         onSelectPerson,
         onEditPerson,
         onDeletePerson,
-        selectedPerson,
         onResizeEnd,
       },
     });
@@ -512,7 +547,6 @@ function convertToReactFlow(
           onSelectPerson,
           onEditPerson,
           onDeletePerson,
-          selectedPerson,
           onResizeEnd,
         },
       });
@@ -550,7 +584,6 @@ function convertToReactFlow(
     const { nodes: childNodes, edges: childEdges } = convertToReactFlow(
       child,
       displaySettings,
-      selectedPerson,
       onSelectPerson,
       onEditPerson,
       onDeletePerson,

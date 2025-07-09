@@ -13,13 +13,14 @@ interface DraggablePersonNodeProps {
     onSelectPerson: (person: Person) => void;
     onEditPerson: (person: Person) => void;
     onDeletePerson: (personId: string) => void;
-    selectedPerson: Person | null;
     onResizeEnd: (personId: string, width: number, height: number) => void;
   };
+  selected?: boolean;
 }
 
 export default function DraggablePersonNode({
   data,
+  selected,
 }: DraggablePersonNodeProps) {
   const {
     person,
@@ -27,12 +28,11 @@ export default function DraggablePersonNode({
     onSelectPerson,
     onEditPerson,
     onDeletePerson,
-    selectedPerson,
     onResizeEnd,
   } = data;
 
   return (
-    <div>
+    <div className="w-full h-full">
       <NodeResizer
         minWidth={100}
         minHeight={50}
@@ -55,7 +55,7 @@ export default function DraggablePersonNode({
       <PersonCard
         person={person}
         displaySettings={displaySettings}
-        isSelected={selectedPerson?.id === person.id}
+        isSelected={selected}
         onClick={() => onSelectPerson(person)}
         onEdit={() => onEditPerson(person)}
         onDelete={() => onDeletePerson(person.id)}
