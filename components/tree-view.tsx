@@ -229,6 +229,65 @@ export default function TreeView({
   };
 
   const onNodeDragStop = async (event: React.MouseEvent, node: Node) => {
+    const spouseEdge = edges.find(
+      (edge) =>
+        (edge.source === node.id || edge.target === node.id) &&
+        tree.relationships.find((r: Relationship) => r.id === edge.id)?.type ===
+          "spouse"
+    );
+
+    if (spouseEdge) {
+      const otherNodeId =
+        spouseEdge.source === node.id ? spouseEdge.target : spouseEdge.source;
+      const otherNode = nodes.find((n) => n.id === otherNodeId);
+
+      if (otherNode) {
+        const newOtherNodePosition = {
+          x: otherNode.position.x,
+          y: otherNode.position.y,
+        };
+        const newThisNodePosition = {
+          x: node.position.x,
+          y: node.position.y,
+        };
+
+        if (
+          Math.abs(node.position.x - otherNode.position.x) <
+          NODE_WIDTH + H_SPACING
+        ) {
+          newThisNodePosition.x = otherNode.position.x;
+          newOtherNodePosition.x = node.position.x;
+
+          await fetch(`/api/relationship/${spouseEdge.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fromPersonId: spouseEdge.target,
+              toPersonId: spouseEdge.source,
+            }),
+          });
+        }
+        await fetch(`/api/person/${otherNode.id}/position`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x: newOtherNodePosition.x,
+            y: newOtherNodePosition.y,
+          }),
+        });
+        await fetch(`/api/person/${node.id}/position`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            x: newThisNodePosition.x,
+            y: newThisNodePosition.y,
+          }),
+        });
+        onUpdateTree();
+        return;
+      }
+    }
+
     await fetch(`/api/person/${node.id}/position`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -443,12 +502,17 @@ function convertToReactFlow(
             r.toPersonId === node.person.id))
     );
     if (relationship && !processedRelationships.has(relationship.id)) {
+      const fromNode =
+        node.person.id === relationship.fromPersonId ? node : node.spouse;
+      const toNode =
+        node.person.id === relationship.toPersonId ? node : node.spouse;
+      const fromNodeIsLeft = fromNode.x < toNode.x;
       edges.push({
         id: relationship.id,
-        source: node.person.id,
-        target: node.spouse.person.id,
-        sourceHandle: "right",
-        targetHandle: "left",
+        source: relationship.fromPersonId,
+        target: relationship.toPersonId,
+        sourceHandle: fromNodeIsLeft ? "right" : "left",
+        targetHandle: fromNodeIsLeft ? "left" : "right",
         type: "straight",
         style: { strokeWidth: 2 },
         zIndex: 1000,
@@ -490,6 +554,8 @@ function convertToReactFlow(
         id: relationship.id,
         source: relationship.fromPersonId,
         target: child.person.id,
+        sourceHandle: "bottom",
+        targetHandle: "top",
         type: "step",
       });
       processedRelationships.add(relationship.id);
@@ -509,6 +575,8 @@ function convertToReactFlow(
         id: relationship.id,
         source: parent.person.id,
         target: node.person.id,
+        sourceHandle: "bottom",
+        targetHandle: "top",
         type: "step",
       });
       processedRelationships.add(relationship.id);
