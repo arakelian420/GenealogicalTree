@@ -40,8 +40,18 @@ export default function DraggablePersonNode({
           onResizeEnd(person.id, params.width, params.height)
         }
       />
-      <Handle type="target" position={Position.Top} />
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ top: "-5px" }}
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        style={{ left: "-5px" }}
+      />
       <PersonCard
         person={person}
         displaySettings={displaySettings}
@@ -50,8 +60,18 @@ export default function DraggablePersonNode({
         onEdit={() => onEditPerson(person)}
         onDelete={() => onDeletePerson(person.id)}
       />
-      <Handle type="source" position={Position.Bottom} />
-      <Handle type="source" position={Position.Right} />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ bottom: "-5px" }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={{ right: "-5px" }}
+      />
     </div>
   );
 }

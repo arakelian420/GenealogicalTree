@@ -150,6 +150,8 @@ export default function TreeView({
       (p) => !childIds.has(p.id) && connectedIds.has(p.id)
     );
     const processedIds = new Set<string>();
+    const processedNodeIds = new Set<string>();
+    const processedRelationshipIds = new Set<string>();
 
     for (const rootPerson of rootPeople) {
       if (!processedIds.has(rootPerson.id)) {
@@ -171,7 +173,9 @@ export default function TreeView({
             setEditingPerson,
             deletePerson,
             tree.relationships,
-            onNodeResizeEnd
+            onNodeResizeEnd,
+            processedRelationshipIds,
+            processedNodeIds
           );
           reactFlowNodes.push(...newNodes);
           reactFlowEdges.push(...newEdges);
@@ -379,41 +383,24 @@ function convertToReactFlow(
   onEditPerson: (person: Person) => void,
   onDeletePerson: (personId: string) => void,
   relationships: Relationship[],
-  onResizeEnd: (personId: string, width: number, height: number) => void
+  onResizeEnd: (personId: string, width: number, height: number) => void,
+  processedRelationships: Set<string>,
+  processedNodes: Set<string>
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  nodes.push({
-    id: node.person.id,
-    type: "draggablePerson",
-    position: { x: node.x, y: node.y },
-    style: {
-      width: (node.person as Person).width || "auto",
-      height: (node.person as Person).height || "auto",
-    },
-    data: {
-      person: node.person,
-      displaySettings,
-      onSelectPerson,
-      onEditPerson,
-      onDeletePerson,
-      selectedPerson,
-      onResizeEnd,
-    },
-  });
-
-  if (node.spouse) {
+  if (!processedNodes.has(node.person.id)) {
     nodes.push({
-      id: node.spouse.person.id,
+      id: node.person.id,
       type: "draggablePerson",
-      position: { x: node.spouse.x, y: node.spouse.y },
+      position: { x: node.x, y: node.y },
       style: {
-        width: (node.spouse.person as Person).width || "auto",
-        height: (node.spouse.person as Person).height || "auto",
+        width: (node.person as Person).width || "auto",
+        height: (node.person as Person).height || "auto",
       },
       data: {
-        person: node.spouse.person,
+        person: node.person,
         displaySettings,
         onSelectPerson,
         onEditPerson,
@@ -422,6 +409,31 @@ function convertToReactFlow(
         onResizeEnd,
       },
     });
+    processedNodes.add(node.person.id);
+  }
+
+  if (node.spouse) {
+    if (!processedNodes.has(node.spouse.person.id)) {
+      nodes.push({
+        id: node.spouse.person.id,
+        type: "draggablePerson",
+        position: { x: node.spouse.x, y: node.spouse.y },
+        style: {
+          width: (node.spouse.person as Person).width || "auto",
+          height: (node.spouse.person as Person).height || "auto",
+        },
+        data: {
+          person: node.spouse.person,
+          displaySettings,
+          onSelectPerson,
+          onEditPerson,
+          onDeletePerson,
+          selectedPerson,
+          onResizeEnd,
+        },
+      });
+      processedNodes.add(node.spouse.person.id);
+    }
     const relationship = relationships.find(
       (r) =>
         r.type === "spouse" &&
@@ -430,13 +442,18 @@ function convertToReactFlow(
           (r.fromPersonId === node.spouse!.person.id &&
             r.toPersonId === node.person.id))
     );
-    if (relationship) {
+    if (relationship && !processedRelationships.has(relationship.id)) {
       edges.push({
         id: relationship.id,
         source: node.person.id,
         target: node.spouse.person.id,
-        type: "step",
+        sourceHandle: "right",
+        targetHandle: "left",
+        type: "straight",
+        style: { strokeWidth: 2 },
+        zIndex: 1000,
       });
+      processedRelationships.add(relationship.id);
     }
   }
 
@@ -449,7 +466,9 @@ function convertToReactFlow(
       onEditPerson,
       onDeletePerson,
       relationships,
-      onResizeEnd
+      onResizeEnd,
+      processedRelationships,
+      processedNodes
     );
     nodes.push(...childNodes);
     edges.push(...childEdges);
@@ -466,13 +485,33 @@ function convertToReactFlow(
         r.toPersonId === child.person.id
     );
 
-    if (relationship) {
+    if (relationship && !processedRelationships.has(relationship.id)) {
       edges.push({
         id: relationship.id,
         source: relationship.fromPersonId,
         target: child.person.id,
         type: "step",
       });
+      processedRelationships.add(relationship.id);
+    }
+  }
+
+  for (const parent of node.parents) {
+    const relationship = relationships.find(
+      (r) =>
+        r.type === "parent_child" &&
+        r.fromPersonId === parent.person.id &&
+        r.toPersonId === node.person.id
+    );
+
+    if (relationship && !processedRelationships.has(relationship.id)) {
+      edges.push({
+        id: relationship.id,
+        source: parent.person.id,
+        target: node.person.id,
+        type: "step",
+      });
+      processedRelationships.add(relationship.id);
     }
   }
 

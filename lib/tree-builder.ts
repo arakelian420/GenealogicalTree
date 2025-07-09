@@ -2,6 +2,7 @@ import type { Person, Relationship } from "@prisma/client";
 
 export interface HierarchyNode {
   person: Person;
+  parents: HierarchyNode[];
   spouse: HierarchyNode | null;
   children: HierarchyNode[];
   x: number;
@@ -46,7 +47,20 @@ export function buildTree(
       .filter((p): p is Person => !!p);
   }
 
-  function buildNode(person: Person): HierarchyNode | null {
+  function getParents(personId: string): Person[] {
+    const parentRels = relationships.filter(
+      (r) => r.type === "parent_child" && r.toPersonId === personId
+    );
+    const parentIds = parentRels.map((r) => r.fromPersonId);
+    return parentIds
+      .map((id) => peopleMap.get(id))
+      .filter((p): p is Person => !!p);
+  }
+
+  function buildNode(
+    person: Person,
+    processedIds: Set<string>
+  ): HierarchyNode | null {
     if (processedIds.has(person.id)) {
       return null;
     }
@@ -57,14 +71,20 @@ export function buildTree(
       processedIds.add(spousePerson.id);
     }
     const children = getChildren(person.id, spousePerson?.id || null);
+    const parents = getParents(person.id);
 
     const childNodes = children
-      .map(buildNode)
+      .map((child) => buildNode(child, processedIds))
+      .filter((n): n is HierarchyNode => !!n);
+
+    const parentNodes = parents
+      .map((p) => buildParentNode(p))
       .filter((n): n is HierarchyNode => !!n);
 
     const spouseNode = spousePerson
       ? {
           person: spousePerson,
+          parents: [],
           spouse: null,
           children: [],
           x: 0,
@@ -76,8 +96,22 @@ export function buildTree(
 
     return {
       person,
+      parents: parentNodes,
       spouse: spouseNode,
       children: childNodes,
+      x: 0,
+      y: 0,
+      modifier: 0,
+      width: 0,
+    };
+  }
+
+  function buildParentNode(person: Person): HierarchyNode {
+    return {
+      person,
+      parents: [],
+      spouse: null,
+      children: [],
       x: 0,
       y: 0,
       modifier: 0,
@@ -88,5 +122,5 @@ export function buildTree(
   const rootPerson = peopleMap.get(rootPersonId);
   if (!rootPerson) return null;
 
-  return buildNode(rootPerson);
+  return buildNode(rootPerson, new Set());
 }

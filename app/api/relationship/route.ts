@@ -3,6 +3,12 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   const { treeId, fromPersonId, toPersonId, type } = await request.json();
+  console.log("Creating relationship:", {
+    treeId,
+    fromPersonId,
+    toPersonId,
+    type,
+  });
   const relationship = await prisma.relationship.create({
     data: {
       type,
