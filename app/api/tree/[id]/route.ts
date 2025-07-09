@@ -5,8 +5,9 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const { id } = await params;
   const tree = await prisma.tree.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       people: true,
       relationships: true,
@@ -23,9 +24,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
     const { isLocked } = await request.json();
     const tree = await prisma.tree.update({
-      where: { id: params.id },
+      where: { id },
       data: { isLocked },
     });
     return NextResponse.json(tree);
