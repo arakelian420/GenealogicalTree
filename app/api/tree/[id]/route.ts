@@ -9,7 +9,25 @@ export async function GET(
   const tree = await prisma.tree.findUnique({
     where: { id },
     include: {
-      people: true,
+      people: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          birthDate: true,
+          deathDate: true,
+          birthPlace: true,
+          occupation: true,
+          notes: true,
+          gender: true,
+          photo: true,
+          treeId: true,
+          x: true,
+          y: true,
+          width: true,
+          height: true,
+        },
+      },
       relationships: true,
     },
   });

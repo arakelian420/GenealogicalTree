@@ -3,7 +3,7 @@
 import React from "react";
 import type { Person } from "@prisma/client";
 import PersonCard from "./person-card";
-import { Handle, Position } from "reactflow";
+import { Handle, Position, NodeResizer } from "reactflow";
 import type { DisplaySettings } from "@/lib/types";
 
 interface DraggablePersonNodeProps {
@@ -14,6 +14,7 @@ interface DraggablePersonNodeProps {
     onEditPerson: (person: Person) => void;
     onDeletePerson: (personId: string) => void;
     selectedPerson: Person | null;
+    onResizeEnd: (personId: string, width: number, height: number) => void;
   };
 }
 
@@ -27,11 +28,20 @@ export default function DraggablePersonNode({
     onEditPerson,
     onDeletePerson,
     selectedPerson,
+    onResizeEnd,
   } = data;
 
   return (
     <div>
+      <NodeResizer
+        minWidth={100}
+        minHeight={50}
+        onResizeEnd={(event, params) =>
+          onResizeEnd(person.id, params.width, params.height)
+        }
+      />
       <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
       <PersonCard
         person={person}
         displaySettings={displaySettings}
@@ -41,6 +51,7 @@ export default function DraggablePersonNode({
         onDelete={() => onDeletePerson(person.id)}
       />
       <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }

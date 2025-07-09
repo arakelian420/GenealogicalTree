@@ -40,6 +40,10 @@ model Person {
   relationshipsFrom Relationship[] @relation("RelationshipFrom")
   relationshipsTo   Relationship[] @relation("RelationshipTo")
   documents         Document[]
+  x                 Int?
+  y                 Int?
+  width             Int?
+  height            Int?
 }
 
 model Relationship {

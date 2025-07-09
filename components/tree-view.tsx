@@ -14,10 +14,17 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import type {
   Tree,
-  Person,
+  Person as PrismaPerson,
   Relationship,
   RelationshipType,
 } from "@prisma/client";
+
+type Person = PrismaPerson & {
+  x: number | null;
+  y: number | null;
+  width: number | null;
+  height: number | null;
+};
 import type { DisplaySettings } from "@/lib/types";
 import { buildTree, HierarchyNode } from "@/lib/tree-builder";
 import DraggablePersonNode from "./draggable-person-node";
@@ -65,6 +72,21 @@ export default function TreeView({
     }
   };
 
+  const onNodeResizeEnd = async (
+    personId: string,
+    width: number,
+    height: number
+  ) => {
+    await fetch(`/api/person/${personId}/position`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        width,
+        height,
+      }),
+    });
+  };
+
   useEffect(() => {
     if (tree.people.length === 0) {
       setNodes([]);
@@ -72,17 +94,58 @@ export default function TreeView({
       return;
     }
 
+    const connectedIds = new Set<string>();
+    tree.relationships.forEach((r) => {
+      connectedIds.add(r.fromPersonId);
+      connectedIds.add(r.toPersonId);
+    });
+
+    const unconnectedPeople = tree.people.filter(
+      (p: Person) => !connectedIds.has(p.id)
+    );
+    const reactFlowNodes: Node[] = [];
+    const reactFlowEdges: Edge[] = [];
+    let x = 0;
+    let y = 0;
+    for (const person of unconnectedPeople) {
+      reactFlowNodes.push({
+        id: person.id,
+        type: "draggablePerson",
+        position:
+          (person as Person).x !== null && (person as Person).y !== null
+            ? { x: (person as Person).x!, y: (person as Person).y! }
+            : { x, y },
+        data: {
+          person,
+          displaySettings,
+          onSelectPerson: setSelectedPerson,
+          onEditPerson: setEditingPerson,
+          onDeletePerson: deletePerson,
+          selectedPerson,
+          onResizeEnd: onNodeResizeEnd,
+        },
+      });
+      if ((person as Person).x === null || (person as Person).y === null) {
+        x += NODE_WIDTH + H_SPACING;
+        if (x > 800) {
+          x = 0;
+          y += V_SPACING;
+        }
+      }
+    }
+
+    let yOffset = y > 0 ? y + V_SPACING : 0;
+
     const childIds = new Set(
       tree.relationships
         .filter((r) => r.type === "parent_child")
         .map((r) => r.toPersonId)
     );
 
-    const rootPeople = tree.people.filter((p) => !childIds.has(p.id));
+    const rootPeople = tree.people.filter(
+      (p) => !childIds.has(p.id) && connectedIds.has(p.id)
+    );
     const processedIds = new Set<string>();
-    const reactFlowNodes: Node[] = [];
-    const reactFlowEdges: Edge[] = [];
-    let yOffset = 0;
 
     for (const rootPerson of rootPeople) {
       if (!processedIds.has(rootPerson.id)) {
@@ -103,7 +166,8 @@ export default function TreeView({
             setSelectedPerson,
             setEditingPerson,
             deletePerson,
-            tree.relationships
+            tree.relationships,
+            onNodeResizeEnd
           );
           reactFlowNodes.push(...newNodes);
           reactFlowEdges.push(...newEdges);
@@ -120,6 +184,19 @@ export default function TreeView({
 
   const saveRelationship = async (type: RelationshipType) => {
     if (!newConnection) return;
+
+    if (type === "spouse") {
+      const sourceNode = nodes.find((n) => n.id === newConnection.source);
+      const targetNode = nodes.find((n) => n.id === newConnection.target);
+      if (sourceNode && targetNode) {
+        targetNode.position = {
+          x: sourceNode.position.x + NODE_WIDTH + H_SPACING,
+          y: sourceNode.position.y,
+        };
+        setNodes([...nodes]);
+      }
+    }
+
     await fetch("/api/relationship", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -143,18 +220,40 @@ export default function TreeView({
     }
   };
 
+  const onNodeDragStop = async (event: React.MouseEvent, node: Node) => {
+    await fetch(`/api/person/${node.id}/position`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x: node.position.x, y: node.position.y }),
+    });
+  };
+
   function layoutTree(
     node: HierarchyNode,
     x: number,
     y: number
   ): { maxX: number } {
-    node.x = x;
-    node.y = y;
-    let currentX = x;
+    const person = node.person as Person;
+    const spouse = node.spouse?.person as Person | undefined;
+
+    if (person.x !== null && person.y !== null) {
+      node.x = person.x;
+      node.y = person.y;
+    } else {
+      node.x = x;
+      node.y = y;
+    }
+
+    let currentX = node.x;
 
     if (node.spouse) {
-      node.spouse.x = x + NODE_WIDTH + H_SPACING;
-      node.spouse.y = y;
+      if (spouse?.x !== null && spouse?.y !== null) {
+        node.spouse.x = spouse!.x!;
+        node.spouse.y = spouse!.y!;
+      } else {
+        node.spouse.x = node.x + NODE_WIDTH + H_SPACING;
+        node.spouse.y = node.y;
+      }
       currentX = node.spouse.x;
     }
 
@@ -176,6 +275,7 @@ export default function TreeView({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onEdgeClick={onEdgeClick}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
       >
@@ -274,7 +374,8 @@ function convertToReactFlow(
   onSelectPerson: (person: Person) => void,
   onEditPerson: (person: Person) => void,
   onDeletePerson: (personId: string) => void,
-  relationships: Relationship[]
+  relationships: Relationship[],
+  onResizeEnd: (personId: string, width: number, height: number) => void
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -283,6 +384,10 @@ function convertToReactFlow(
     id: node.person.id,
     type: "draggablePerson",
     position: { x: node.x, y: node.y },
+    style: {
+      width: (node.person as Person).width || "auto",
+      height: (node.person as Person).height || "auto",
+    },
     data: {
       person: node.person,
       displaySettings,
@@ -290,6 +395,7 @@ function convertToReactFlow(
       onEditPerson,
       onDeletePerson,
       selectedPerson,
+      onResizeEnd,
     },
   });
 
@@ -333,7 +439,8 @@ function convertToReactFlow(
       onSelectPerson,
       onEditPerson,
       onDeletePerson,
-      relationships
+      relationships,
+      onResizeEnd
     );
     nodes.push(...childNodes);
     edges.push(...childEdges);
