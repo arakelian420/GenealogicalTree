@@ -33,7 +33,7 @@ export default function TreePage() {
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const fetchTree = useCallback(async () => {
-    const response = await fetch(`/api/tree/${treeId}`);
+    const response = await fetch(`/api/tree/${treeId}`, { cache: "no-store" });
     if (response.ok) {
       const data = await response.json();
       setTree(data);
@@ -150,6 +150,7 @@ export default function TreePage() {
                 tree={tree}
                 displaySettings={displaySettings}
                 onUpdateTree={fetchTree}
+                isLocked={tree.isLocked}
               />
             </ReactFlowProvider>
           </div>
@@ -168,6 +169,8 @@ export default function TreePage() {
         onClose={() => setShowSettings(false)}
         settings={displaySettings}
         onUpdateSettings={setDisplaySettings}
+        tree={tree}
+        onUpdateTree={fetchTree}
       />
     </div>
   );

@@ -9,8 +9,8 @@ import React, {
 } from "react";
 import ReactFlow, {
   Background,
-  Controls,
   MiniMap,
+  Controls,
   useNodesState,
   useEdgesState,
   type Node,
@@ -19,7 +19,15 @@ import ReactFlow, {
   useReactFlow,
   ControlButton,
 } from "reactflow";
-import { X } from "lucide-react";
+import {
+  X,
+  Lock,
+  Unlock,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Printer,
+} from "lucide-react";
 import "reactflow/dist/style.css";
 import type { Tree, Relationship, RelationshipType } from "@prisma/client";
 
@@ -38,12 +46,14 @@ interface TreeViewProps {
   tree: Tree & { people: Person[]; relationships: Relationship[] };
   displaySettings: DisplaySettings;
   onUpdateTree: () => void;
+  isLocked: boolean;
 }
 
 export default function TreeView({
   tree,
   displaySettings,
   onUpdateTree,
+  isLocked,
 }: TreeViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
@@ -51,7 +61,7 @@ export default function TreeView({
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
-  const { fitView } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const nodeTypes = useMemo(
@@ -167,6 +177,7 @@ export default function TreeView({
           onEditPerson: setEditingPerson,
           onDeletePerson: deletePerson,
           onResizeEnd: onNodeResizeEnd,
+          isLocked,
         },
       });
       if ((person as Person).x === null || (person as Person).y === null) {
@@ -212,6 +223,7 @@ export default function TreeView({
             deletePerson,
             tree.relationships,
             onNodeResizeEnd,
+            isLocked,
             processedRelationshipIds,
             processedNodeIds
           );
@@ -359,6 +371,28 @@ export default function TreeView({
     });
   };
 
+  const handleToggleLock = async () => {
+    try {
+      const response = await fetch(`/api/tree/${tree.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isLocked: !isLocked }),
+      });
+
+      if (response.ok) {
+        onUpdateTree();
+      } else {
+        const errorText = await response.text();
+        console.error(
+          "Failed to update tree lock status. Server response:",
+          errorText
+        );
+      }
+    } catch (error) {
+      console.error("Error updating tree lock status:", error);
+    }
+  };
+
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
@@ -391,11 +425,34 @@ export default function TreeView({
         nodeTypes={nodeTypes}
         fitView
         onPaneClick={() => setSelectedPerson(null)}
+        nodesDraggable={!isLocked}
+        nodesConnectable={!isLocked}
+        elementsSelectable={!isLocked}
       >
         <Background />
-        <Controls className="print:hidden">
+        <Controls
+          className="print:hidden"
+          showZoom={false}
+          showFitView={false}
+          showInteractive={false}
+        >
+          <ControlButton onClick={() => zoomIn()} title="Zoom In">
+            <ZoomIn />
+          </ControlButton>
+          <ControlButton onClick={() => zoomOut()} title="Zoom Out">
+            <ZoomOut />
+          </ControlButton>
+          <ControlButton onClick={() => fitView()} title="Fit View">
+            <Maximize />
+          </ControlButton>
+          <ControlButton
+            onClick={handleToggleLock}
+            title={isLocked ? "Unlock" : "Lock"}
+          >
+            {isLocked ? <Lock /> : <Unlock />}
+          </ControlButton>
           <ControlButton onClick={handlePrint} title="Print">
-            🖨️
+            <Printer />
           </ControlButton>
         </Controls>
         <MiniMap className="print:hidden" />
@@ -504,6 +561,7 @@ function convertToReactFlow(
   onDeletePerson: (personId: string) => void,
   relationships: Relationship[],
   onResizeEnd: (personId: string, width: number, height: number) => void,
+  isLocked: boolean,
   processedRelationships: Set<string>,
   processedNodes: Set<string>
 ): { nodes: Node[]; edges: Edge[] } {
@@ -526,6 +584,7 @@ function convertToReactFlow(
         onEditPerson,
         onDeletePerson,
         onResizeEnd,
+        isLocked,
       },
     });
     processedNodes.add(node.person.id);
@@ -548,6 +607,7 @@ function convertToReactFlow(
           onEditPerson,
           onDeletePerson,
           onResizeEnd,
+          isLocked,
         },
       });
       processedNodes.add(node.spouse.person.id);
@@ -589,6 +649,7 @@ function convertToReactFlow(
       onDeletePerson,
       relationships,
       onResizeEnd,
+      isLocked,
       processedRelationships,
       processedNodes
     );

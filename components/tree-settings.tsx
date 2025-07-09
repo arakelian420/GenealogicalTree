@@ -18,11 +18,15 @@ import {
 } from "@/components/ui/select";
 import type { DisplaySettings } from "@/lib/types";
 
+import type { Tree } from "@prisma/client";
+
 interface TreeSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   settings: DisplaySettings;
   onUpdateSettings: (settings: DisplaySettings) => void;
+  tree: Tree;
+  onUpdateTree: () => void;
 }
 
 export default function TreeSettings({
@@ -30,6 +34,8 @@ export default function TreeSettings({
   onClose,
   settings,
   onUpdateSettings,
+  tree,
+  onUpdateTree,
 }: TreeSettingsProps) {
   const updateSetting = (
     key: keyof DisplaySettings,

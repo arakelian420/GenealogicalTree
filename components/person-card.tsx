@@ -28,6 +28,7 @@ interface PersonCardProps {
   onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  isLocked?: boolean;
 }
 
 export default function PersonCard({
@@ -37,6 +38,7 @@ export default function PersonCard({
   onClick,
   onEdit,
   onDelete,
+  isLocked = false,
 }: PersonCardProps) {
   const [siblings, setSiblings] = useState<Person[]>([]);
 
@@ -90,30 +92,32 @@ export default function PersonCard({
               <User className="w-12 h-12 text-gray-400" />
             </div>
           )}
-          <div className="absolute top-1 right-1 flex flex-col gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.();
-              }}
-              className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.();
-              }}
-              className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-red-500 hover:text-red-700"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+          {!isLocked && (
+            <div className="absolute top-1 right-1 flex flex-col gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.();
+                }}
+                className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                }}
+                className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="pt-2 text-center">
