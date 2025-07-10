@@ -48,6 +48,7 @@ type EditablePerson = Person & {
   documents?: Document[];
   facebookUrl?: string | null;
   fatherName?: string | null;
+  color?: string | null;
 };
 
 interface PersonFormProps {
@@ -79,6 +80,7 @@ export default function PersonForm({
     currentPlace: "",
     facebookUrl: "",
     fatherName: "",
+    color: "",
   });
 
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -99,6 +101,7 @@ export default function PersonForm({
         currentPlace: editingPerson.currentPlace || "",
         facebookUrl: editingPerson.facebookUrl || "",
         fatherName: editingPerson.fatherName || "",
+        color: editingPerson.color || "",
       });
       if (editingPerson.id) {
         fetch(`/api/person/${editingPerson.id}/documents`)
@@ -120,6 +123,7 @@ export default function PersonForm({
         currentPlace: "",
         facebookUrl: "",
         fatherName: "",
+        color: "",
       });
       setDocuments([]);
     }
@@ -304,6 +308,40 @@ export default function PersonForm({
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="color">Node Color</Label>
+            <Input
+              id="color"
+              type="color"
+              value={formData.color}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, color: e.target.value }))
+              }
+              className="w-full h-10"
+            />
+            <div className="flex gap-2 mt-2">
+              {[
+                "#a8dadc",
+                "#457b9d",
+                "#1d3557",
+                "#f4a261",
+                "#e76f51",
+                "#e9c46a",
+                "#eff6ff",
+                "#fdf2f8",
+              ].map((color) => (
+                <div
+                  key={color}
+                  className="w-6 h-6 rounded-full cursor-pointer"
+                  style={{ backgroundColor: color }}
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, color: color }))
+                  }
+                />
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

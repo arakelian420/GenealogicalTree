@@ -19,6 +19,7 @@ type DisplayablePerson = Person & {
   currentPlace?: string | null;
   documents?: Document[];
   facebookUrl?: string | null;
+  color?: string | null;
 };
 
 interface PersonCardProps {
@@ -49,27 +50,44 @@ export default function PersonCard({
       .then(setSiblings);
   }, [person.id]);
 
-  const getGenderStyling = (gender?: Person["gender"]) => {
+  const getGenderStyling = (
+    gender?: Person["gender"],
+    customColor?: string | null
+  ) => {
+    if (customColor) {
+      return {
+        colorStyle: { backgroundColor: customColor },
+        icon:
+          gender === "male" ? (
+            <Mars className="w-3 h-3 text-white" />
+          ) : gender === "female" ? (
+            <Venus className="w-3 h-3 text-white" />
+          ) : null,
+      };
+    }
     switch (gender) {
       case "male":
         return {
-          color: "border-blue-200 bg-blue-50",
+          colorClassName: "border-blue-200 bg-blue-50",
           icon: <Mars className="w-3 h-3 text-blue-500" />,
         };
       case "female":
         return {
-          color: "border-pink-200 bg-pink-50",
+          colorClassName: "border-pink-200 bg-pink-50",
           icon: <Venus className="w-3 h-3 text-pink-500" />,
         };
       default:
         return {
-          color: "border-gray-200 bg-gray-50",
+          colorClassName: "border-gray-200 bg-gray-50",
           icon: null,
         };
     }
   };
 
-  const { color, icon } = getGenderStyling(person.gender);
+  const { colorClassName, colorStyle, icon } = getGenderStyling(
+    person.gender,
+    person.color
+  );
 
   const handleClick = () => {
     if (isLocked) {
@@ -92,7 +110,8 @@ export default function PersonCard({
     <Card
       className={`w-full h-full cursor-pointer transition-all hover:shadow-md ${
         isSelected ? "ring-2 ring-blue-500" : ""
-      } ${color}`}
+      } ${colorClassName || ""}`}
+      style={colorStyle}
       onClick={handleClick}
     >
       <CardContent className="p-3 h-full flex flex-col">
@@ -141,7 +160,7 @@ export default function PersonCard({
         <div className="pt-2 text-center">
           <div className="flex items-center justify-center gap-1">
             {icon}
-            <h4 className="font-semibold text-sm">
+            <h4 className={`font-semibold text-sm`}>
               {person.firstName} {person.nickname && `(${person.nickname})`}{" "}
               {person.lastName}
             </h4>
@@ -157,7 +176,7 @@ export default function PersonCard({
             )}
           </div>
 
-          <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+          <div className={`text-xs mt-1 space-y-0.5 text-gray-600`}>
             {displaySettings.showBirthDate && person.birthDate && (
               <div>Born: {person.birthDate}</div>
             )}

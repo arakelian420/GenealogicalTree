@@ -14,4 +14,5 @@ export type Person = PrismaPerson & {
   width?: number | null;
   height?: number | null;
   documents?: Document[];
+  color?: string | null;
 };

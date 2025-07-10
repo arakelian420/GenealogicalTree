@@ -7,45 +7,58 @@ export async function PUT(
   context: { params: { id: string } }
 ) {
   const { id } = await context.params;
-  const { photo, documents, ...personData } = await request.json();
+  const body = await request.json();
+  const { documents, ...personUpdateData } = body;
 
-  const person = await prisma.person.findUnique({
-    where: { id },
-    include: { tree: true },
-  });
-
-  if (person?.tree.isLocked) {
-    return new NextResponse("Tree is locked", { status: 403 });
-  }
-
-  const updatedPerson = await prisma.$transaction(async (tx) => {
-    const updatedPerson = await tx.person.update({
+  try {
+    const person = await prisma.person.findUnique({
       where: { id },
-      data: {
-        ...personData,
-        ...(photo && { photo }),
-      },
-      include: {
-        documents: true,
-      },
+      include: { tree: true },
     });
 
-    if (documents && documents.length > 0) {
-      await tx.document.deleteMany({
-        where: { personId: id },
-      });
-      await tx.document.createMany({
-        data: documents.map((doc: { name: string; url: string }) => ({
-          ...doc,
-          personId: id,
-        })),
-      });
+    if (person?.tree.isLocked) {
+      return new NextResponse("Tree is locked", { status: 403 });
     }
 
-    return updatedPerson;
-  });
+    const updatedPerson = await prisma.$transaction(async (tx) => {
+      const updatedPersonData = await tx.person.update({
+        where: { id },
+        data: personUpdateData,
+      });
 
-  return NextResponse.json(updatedPerson);
+      if (documents) {
+        await tx.document.deleteMany({
+          where: { personId: id },
+        });
+        if (documents.length > 0) {
+          await tx.document.createMany({
+            data: documents.map((doc: { name: string; url: string }) => ({
+              name: doc.name,
+              url: doc.url,
+              personId: id,
+            })),
+          });
+        }
+      }
+
+      return updatedPersonData;
+    });
+
+    const personWithDocuments = await prisma.person.findUnique({
+      where: { id },
+      include: { documents: true },
+    });
+
+    return NextResponse.json(personWithDocuments);
+  } catch (error) {
+    console.error("Failed to update person:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    return NextResponse.json(
+      { error: `Failed to update person: ${errorMessage}` },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(
