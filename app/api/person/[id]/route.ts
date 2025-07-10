@@ -9,7 +9,16 @@ export async function PUT(
   const { id } = await context.params;
   const { photo, documents, ...personData } = await request.json();
 
-  const person = await prisma.$transaction(async (tx) => {
+  const person = await prisma.person.findUnique({
+    where: { id },
+    include: { tree: true },
+  });
+
+  if (person?.tree.isLocked) {
+    return new NextResponse("Tree is locked", { status: 403 });
+  }
+
+  const updatedPerson = await prisma.$transaction(async (tx) => {
     const updatedPerson = await tx.person.update({
       where: { id },
       data: {
@@ -36,7 +45,7 @@ export async function PUT(
     return updatedPerson;
   });
 
-  return NextResponse.json(person);
+  return NextResponse.json(updatedPerson);
 }
 
 export async function DELETE(
@@ -44,6 +53,14 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   const { id } = await context.params;
+  const person = await prisma.person.findUnique({
+    where: { id },
+    include: { tree: true },
+  });
+
+  if (person?.tree.isLocked) {
+    return new NextResponse("Tree is locked", { status: 403 });
+  }
   try {
     await prisma.$transaction(async (tx) => {
       await tx.tree.updateMany({

@@ -187,6 +187,7 @@ export default function TreeView({
   };
 
   const onEdgeClick = async (event: React.MouseEvent, edge: Edge) => {
+    if (isLocked) return;
     if (window.confirm("Are you sure you want to delete this relationship?")) {
       await fetch(`/api/relationship/${edge.id}`, {
         method: "DELETE",
@@ -384,6 +385,7 @@ export default function TreeView({
         tree={tree}
         selectedPerson={selectedPerson}
         onUpdateTree={onUpdateTree}
+        isLocked={isLocked}
       />
       <Dialog
         open={!!personToDelete}

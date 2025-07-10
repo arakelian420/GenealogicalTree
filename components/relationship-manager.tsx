@@ -31,6 +31,7 @@ interface RelationshipManagerProps {
   tree: Tree & { people: Person[]; relationships: Relationship[] };
   selectedPerson: Person | null;
   onUpdateTree: () => void;
+  isLocked: boolean;
 }
 
 export default function RelationshipManager({
@@ -39,6 +40,7 @@ export default function RelationshipManager({
   tree,
   selectedPerson,
   onUpdateTree,
+  isLocked,
 }: RelationshipManagerProps) {
   const [newRelationType, setNewRelationType] =
     useState<RelationshipType>("parent_child");
@@ -163,7 +165,7 @@ export default function RelationshipManager({
               </div>
               <Button
                 onClick={addRelationship}
-                disabled={!newRelatedPersonId}
+                disabled={!newRelatedPersonId || isLocked}
                 className="w-full"
               >
                 Add Relationship
@@ -191,6 +193,7 @@ export default function RelationshipManager({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeRelationship(relationship.id)}
+                      disabled={isLocked}
                       className="text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />

@@ -3,12 +3,13 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   const { treeId, fromPersonId, toPersonId, type } = await request.json();
-  console.log("Creating relationship:", {
-    treeId,
-    fromPersonId,
-    toPersonId,
-    type,
+  const tree = await prisma.tree.findUnique({
+    where: { id: treeId },
   });
+
+  if (tree?.isLocked) {
+    return new NextResponse("Tree is locked", { status: 403 });
+  }
   const relationship = await prisma.relationship.create({
     data: {
       type,
