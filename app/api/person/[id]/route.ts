@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { unstable_getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function PUT(
   request: NextRequest,
   context: { params: { id: string } }
 ) {
+  const session = await unstable_getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await context.params;
   const body = await request.json();
   const { documents, ...personUpdateData } = body;
@@ -16,33 +23,43 @@ export async function PUT(
       include: { tree: true },
     });
 
+    if (!person) {
+      return new NextResponse("Person not found", { status: 404 });
+    }
+
+    if (person.tree.userId !== session.user.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     if (person?.tree.isLocked) {
       return new NextResponse("Tree is locked", { status: 403 });
     }
 
-    const updatedPerson = await prisma.$transaction(async (tx) => {
-      const updatedPersonData = await tx.person.update({
-        where: { id },
-        data: personUpdateData,
-      });
-
-      if (documents) {
-        await tx.document.deleteMany({
-          where: { personId: id },
+    const updatedPerson = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const updatedPersonData = await tx.person.update({
+          where: { id },
+          data: personUpdateData,
         });
-        if (documents.length > 0) {
-          await tx.document.createMany({
-            data: documents.map((doc: { name: string; url: string }) => ({
-              name: doc.name,
-              url: doc.url,
-              personId: id,
-            })),
-          });
-        }
-      }
 
-      return updatedPersonData;
-    });
+        if (documents) {
+          await tx.document.deleteMany({
+            where: { personId: id },
+          });
+          if (documents.length > 0) {
+            await tx.document.createMany({
+              data: documents.map((doc: { name: string; url: string }) => ({
+                name: doc.name,
+                url: doc.url,
+                personId: id,
+              })),
+            });
+          }
+        }
+
+        return updatedPersonData;
+      }
+    );
 
     const personWithDocuments = await prisma.person.findUnique({
       where: { id },
@@ -65,17 +82,30 @@ export async function DELETE(
   request: NextRequest,
   context: { params: { id: string } }
 ) {
+  const session = await unstable_getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await context.params;
   const person = await prisma.person.findUnique({
     where: { id },
     include: { tree: true },
   });
 
+  if (!person) {
+    return new NextResponse("Person not found", { status: 404 });
+  }
+
+  if (person.tree.userId !== session.user.id) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   if (person?.tree.isLocked) {
     return new NextResponse("Tree is locked", { status: 403 });
   }
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.tree.updateMany({
         where: { rootPersonId: id },
         data: { rootPersonId: null },
@@ -93,13 +123,16 @@ export async function DELETE(
       });
     });
     return new NextResponse(null, { status: 204 });
-  } catch (error) {
+  } catch (e) {
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
+      typeof e === "object" &&
+      e !== null &&
+      "code" in e &&
+      e.code === "P2025"
     ) {
       return new NextResponse(null, { status: 204 });
     }
+    const error = e as Error;
     const errorMessage =
       error instanceof Error ? error.message : "An unknown error occurred";
     console.error("Failed to delete person:", error);

@@ -31,7 +31,12 @@ import {
   Printer,
 } from "lucide-react";
 import "reactflow/dist/style.css";
-import type { Tree, Relationship, RelationshipType } from "@prisma/client";
+import type {
+  Tree,
+  Relationship,
+  Document,
+  RelationshipType,
+} from "@prisma/client";
 
 import type { DisplaySettings, Person } from "@/lib/types";
 import { buildTree, HierarchyNode } from "@/lib/tree-builder";
@@ -104,25 +109,6 @@ export default function TreeView({
     },
   });
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "a") {
-        event.preventDefault();
-        setNodes((nds) => {
-          const allNodeIds = nds.map((node) => node.id);
-          setSelectedNodeIds(allNodeIds);
-          return nds.map((node) => ({ ...node, selected: true }));
-        });
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [setNodes]);
-
   const nodeTypes = useMemo(
     () => ({ draggablePerson: DraggablePersonNode }),
     []
@@ -136,7 +122,9 @@ export default function TreeView({
         });
         if (response.ok) {
           onUpdateTree();
-          setSelectedPerson((prev) => (prev?.id === personId ? null : prev));
+          setSelectedPerson((prev: Person | null) =>
+            prev?.id === personId ? null : prev
+          );
         } else {
           const { error } = await response.json();
           alert(`Failed to delete person: ${error}`);
@@ -411,7 +399,7 @@ export default function TreeView({
                 <div>
                   <span className="font-medium">Documents:</span>
                   <ul className="list-disc list-inside">
-                    {selectedPerson.documents.map((doc) => (
+                    {selectedPerson.documents.map((doc: Document) => (
                       <li key={doc.id}>
                         <a
                           href={doc.url}

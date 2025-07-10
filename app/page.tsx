@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,11 +29,14 @@ import {
   Calendar,
   Trash2,
   AlertTriangle,
+  LogIn,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
-import { type Tree, type Person, type Relationship } from "@prisma/client";
+import type { Tree, Person, Relationship } from "@/lib/types";
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
   const [trees, setTrees] = useState<
     (Tree & { people: Person[]; relationships: Relationship[] })[]
   >([]);
@@ -44,13 +48,17 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    fetchTrees();
-  }, []);
+    if (status === "authenticated") {
+      fetchTrees();
+    }
+  }, [status]);
 
   const fetchTrees = async () => {
     const response = await fetch("/api/tree");
-    const data = await response.json();
-    setTrees(data);
+    if (response.ok) {
+      const data = await response.json();
+      setTrees(data);
+    }
   };
 
   const createTree = async () => {
@@ -83,19 +91,69 @@ export default function Dashboard() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        <header className="text-center mb-8">
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <TreePine className="h-8 w-8 text-green-600" />
-            <h1 className="text-4xl font-bold text-gray-900">
+            <TreePine className="h-12 w-12 text-green-600" />
+            <h1 className="text-5xl font-bold text-gray-900">
               Family Tree Manager
             </h1>
           </div>
-          <p className="text-lg text-gray-600">
-            Create and manage your family genealogy
+          <p className="text-xl text-gray-600">
+            Please sign in to manage your family trees.
           </p>
+        </div>
+        <div className="flex gap-4">
+          <Link href="/signin">
+            <Button size="lg">
+              <LogIn className="mr-2 h-5 w-5" />
+              Sign In
+            </Button>
+          </Link>
+          <Link href="/register">
+            <Button variant="outline" size="lg">
+              Register
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-6xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <TreePine className="h-8 w-8 text-green-600" />
+              <h1 className="text-4xl font-bold text-gray-900">
+                Family Tree Manager
+              </h1>
+            </div>
+            <p className="text-lg text-gray-600">
+              Create and manage your family genealogy
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-gray-700">
+              Signed in as <strong>{session?.user?.email}</strong>
+            </p>
+            <Button onClick={() => signOut()} variant="outline" size="sm">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </header>
 
         <div className="flex justify-between items-center mb-6">
