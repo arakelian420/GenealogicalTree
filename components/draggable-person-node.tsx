@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { Person } from "@prisma/client";
+import type { Person } from "@/lib/types";
 import PersonCard from "./person-card";
 import { Handle, Position, NodeResizer } from "reactflow";
 import type { DisplaySettings } from "@/lib/types";
@@ -21,7 +21,7 @@ interface DraggablePersonNodeProps {
 
 export default function DraggablePersonNode({
   data,
-  selected,
+  selected = false,
 }: DraggablePersonNodeProps) {
   const {
     person,

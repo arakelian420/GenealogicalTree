@@ -122,6 +122,8 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          String    @default("user")
+  status        String    @default("disabled")
   accounts      Account[]
   sessions      Session[]
   trees         Tree[]

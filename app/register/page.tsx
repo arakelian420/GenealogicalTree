@@ -31,16 +31,7 @@ export default function Register() {
     });
 
     if (response.ok) {
-      const res = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-      });
-      if (res?.ok) {
-        router.push("/");
-      } else {
-        setError("Failed to sign in after registration.");
-      }
+      router.push("/signin?message=wait-for-approval");
     } else {
       const data = await response.json();
       setError(data.error || "Something went wrong.");
