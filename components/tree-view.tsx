@@ -18,6 +18,7 @@ import ReactFlow, {
   type Connection,
   useReactFlow,
   ControlButton,
+  useOnSelectionChange,
 } from "reactflow";
 import {
   AlertTriangle,
@@ -95,6 +96,32 @@ export default function TreeView({
   const [edgeToDelete, setEdgeToDelete] = useState<Edge | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
+
+  useOnSelectionChange({
+    onChange: ({ nodes }) => {
+      setSelectedNodeIds(nodes.map((node) => node.id));
+    },
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "a") {
+        event.preventDefault();
+        setNodes((nds) => {
+          const allNodeIds = nds.map((node) => node.id);
+          setSelectedNodeIds(allNodeIds);
+          return nds.map((node) => ({ ...node, selected: true }));
+        });
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setNodes]);
 
   const nodeTypes = useMemo(
     () => ({ draggablePerson: DraggablePersonNode }),
@@ -127,10 +154,25 @@ export default function TreeView({
     width: number,
     height: number
   ) => {
-    await fetch(`/api/person/${personId}/position`, {
+    console.log("Resizing, selected nodes:", selectedNodeIds);
+    const nodeIdsToResize =
+      selectedNodeIds.length > 1 && selectedNodeIds.includes(personId)
+        ? selectedNodeIds
+        : [personId];
+
+    setNodes((nds) =>
+      nds.map((n) =>
+        nodeIdsToResize.includes(n.id)
+          ? { ...n, style: { ...n.style, width, height } }
+          : n
+      )
+    );
+
+    await fetch(`/api/person/position`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        personIds: nodeIdsToResize,
         width,
         height,
       }),
@@ -270,10 +312,12 @@ export default function TreeView({
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
+        minZoom={0.1}
         onPaneClick={() => setSelectedPerson(null)}
         nodesDraggable={!isLocked}
         nodesConnectable={true}
         elementsSelectable={true}
+        multiSelectionKeyCode="Shift"
       >
         <Background />
         <Controls
