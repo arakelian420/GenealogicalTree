@@ -47,13 +47,14 @@ type EditablePerson = Person & {
   currentPlace?: string | null;
   documents?: Document[];
   facebookUrl?: string | null;
+  fatherName?: string | null;
 };
 
 interface PersonFormProps {
   isOpen: boolean;
   onClose: () => void;
   tree: Tree & { people: Person[]; relationships: Relationship[] };
-  onUpdateTree: () => void;
+  onUpdateTree: (person: Person) => void;
   editingPerson?: EditablePerson | null;
 }
 
@@ -77,10 +78,9 @@ export default function PersonForm({
     nickname: "",
     currentPlace: "",
     facebookUrl: "",
+    fatherName: "",
   });
 
-  const [selectedParents, setSelectedParents] = useState<string[]>([]);
-  const [selectedSpouses, setSelectedSpouses] = useState<string[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -98,8 +98,13 @@ export default function PersonForm({
         nickname: editingPerson.nickname || "",
         currentPlace: editingPerson.currentPlace || "",
         facebookUrl: editingPerson.facebookUrl || "",
+        fatherName: editingPerson.fatherName || "",
       });
-      setDocuments(editingPerson.documents || []);
+      if (editingPerson.id) {
+        fetch(`/api/person/${editingPerson.id}/documents`)
+          .then((res) => res.json())
+          .then(setDocuments);
+      }
     } else {
       setFormData({
         firstName: "",
@@ -114,23 +119,9 @@ export default function PersonForm({
         nickname: "",
         currentPlace: "",
         facebookUrl: "",
+        fatherName: "",
       });
       setDocuments([]);
-    }
-    if (editingPerson && isOpen) {
-      fetch(`/api/person/${editingPerson.id}/parents`)
-        .then((res) => res.json())
-        .then((parents) =>
-          setSelectedParents(parents.map((p: Person) => p.id))
-        );
-      fetch(`/api/person/${editingPerson.id}/spouses`)
-        .then((res) => res.json())
-        .then((spouses) =>
-          setSelectedSpouses(spouses.map((s: Person) => s.id))
-        );
-    } else {
-      setSelectedParents([]);
-      setSelectedSpouses([]);
     }
   }, [editingPerson, isOpen, tree]);
 
@@ -159,7 +150,7 @@ export default function PersonForm({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
-    if (!file || !editingPerson) return;
+    if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -171,20 +162,12 @@ export default function PersonForm({
 
     if (uploadResponse.ok) {
       const { url } = await uploadResponse.json();
-      const docData = {
-        personId: editingPerson.id,
+      const newDocument = {
+        id: `new-${Date.now()}`,
         name: file.name,
         url,
       };
-      const docResponse = await fetch("/api/document", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(docData),
-      });
-      if (docResponse.ok) {
-        const newDocument = await docResponse.json();
-        setDocuments((prev) => [...prev, newDocument]);
-      }
+      setDocuments((prev) => [...prev, newDocument]);
     }
   };
 
@@ -200,6 +183,7 @@ export default function PersonForm({
       ...formData,
       photo: formData.photo,
       treeId: tree.id,
+      documents,
     };
 
     const response = editingPerson
@@ -217,46 +201,7 @@ export default function PersonForm({
     if (response.ok) {
       const savedPerson = await response.json();
 
-      if (editingPerson) {
-        await fetch(`/api/person/${editingPerson.id}/relationships`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            parents: selectedParents,
-            spouses: selectedSpouses,
-          }),
-        });
-      } else {
-        // For new people, create relationships after the person is created
-        const parentPromises = selectedParents.map((parentId) =>
-          fetch("/api/relationship", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              treeId: tree.id,
-              fromPersonId: parentId,
-              toPersonId: savedPerson.id,
-              type: "parent_child",
-            }),
-          })
-        );
-
-        const spousePromises = selectedSpouses.map((spouseId) =>
-          fetch("/api/relationship", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              treeId: tree.id,
-              fromPersonId: savedPerson.id,
-              toPersonId: spouseId,
-              type: "spouse",
-            }),
-          })
-        );
-        await Promise.all([...parentPromises, ...spousePromises]);
-      }
-
-      await onUpdateTree();
+      onUpdateTree(savedPerson);
       onClose();
     }
   };
@@ -302,6 +247,18 @@ export default function PersonForm({
                 placeholder="Last name"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="fatherName">Father's Name</Label>
+            <Input
+              id="fatherName"
+              value={formData.fatherName}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, fatherName: e.target.value }))
+              }
+              placeholder="Father's full name"
+            />
           </div>
 
           <div>
@@ -393,6 +350,21 @@ export default function PersonForm({
           </div>
 
           <div>
+            <Label htmlFor="currentPlace">Place of Living</Label>
+            <Input
+              id="currentPlace"
+              value={formData.currentPlace}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  currentPlace: e.target.value,
+                }))
+              }
+              placeholder="City, State, Country"
+            />
+          </div>
+
+          <div>
             <Label htmlFor="occupation">Occupation</Label>
             <Input
               id="occupation"
@@ -432,91 +404,38 @@ export default function PersonForm({
             />
           </div>
 
-          {editingPerson && (
-            <div>
-              <Label htmlFor="documents">Related Documents</Label>
-              <Input
-                id="documents"
-                type="file"
-                onChange={handleDocumentUpload}
-              />
-              <ul className="mt-2 space-y-1">
-                {documents.map((doc) => (
-                  <li
-                    key={doc.id}
-                    className="flex items-center justify-between text-sm"
+          <div>
+            <Label htmlFor="documents">Related Documents</Label>
+            <Input
+              id="documents"
+              type="file"
+              multiple
+              onChange={handleDocumentUpload}
+            />
+            <ul className="mt-2 space-y-1">
+              {documents.map((doc) => (
+                <li
+                  key={doc.id}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <a
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
                   >
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      {doc.name}
-                    </a>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteDocument(doc.id)}
-                    >
-                      &times;
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <div>
-            <Label>Parents</Label>
-            <div className="space-y-2">
-              {tree.people
-                .filter((p) => p.id !== editingPerson?.id)
-                .map((p) => (
-                  <div key={p.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`parent-${p.id}`}
-                      checked={selectedParents.includes(p.id)}
-                      onCheckedChange={(checked: boolean) => {
-                        setSelectedParents((prev) =>
-                          checked
-                            ? [...prev, p.id]
-                            : prev.filter((id) => id !== p.id)
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`parent-${p.id}`}>
-                      {p.firstName} {p.lastName}
-                    </Label>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>Spouses</Label>
-            <div className="space-y-2">
-              {tree.people
-                .filter((p) => p.id !== editingPerson?.id)
-                .map((p) => (
-                  <div key={p.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`spouse-${p.id}`}
-                      checked={selectedSpouses.includes(p.id)}
-                      onCheckedChange={(checked: boolean) => {
-                        setSelectedSpouses((prev) =>
-                          checked
-                            ? [...prev, p.id]
-                            : prev.filter((id) => id !== p.id)
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`spouse-${p.id}`}>
-                      {p.firstName} {p.lastName}
-                    </Label>
-                  </div>
-                ))}
-            </div>
+                    {doc.name}
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteDocument(doc.id)}
+                  >
+                    &times;
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

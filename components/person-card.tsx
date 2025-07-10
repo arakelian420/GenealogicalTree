@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Person } from "@prisma/client";
 import type { DisplaySettings } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +41,7 @@ export default function PersonCard({
   isLocked = false,
 }: PersonCardProps) {
   const [siblings, setSiblings] = useState<Person[]>([]);
+  const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetch(`/api/person/${person.id}/siblings`)
@@ -70,12 +71,25 @@ export default function PersonCard({
 
   const { color, icon } = getGenderStyling(person.gender);
 
+  const handleClick = () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+      onEdit?.();
+    } else {
+      clickTimeout.current = setTimeout(() => {
+        onClick?.();
+        clickTimeout.current = null;
+      }, 200);
+    }
+  };
+
   return (
     <Card
       className={`w-full h-full cursor-pointer transition-all hover:shadow-md ${
         isSelected ? "ring-2 ring-blue-500" : ""
       } ${color}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <CardContent className="p-3 h-full flex flex-col">
         <div className="relative flex-grow">
@@ -152,25 +166,6 @@ export default function PersonCard({
             )}
             {displaySettings.showOccupation && person.occupation && (
               <div>{person.occupation}</div>
-            )}
-            {person.documents && person.documents.length > 0 && (
-              <div className="pt-2">
-                <h5 className="font-semibold text-xs">Documents:</h5>
-                <ul className="text-left">
-                  {person.documents.map((doc) => (
-                    <li key={doc.id}>
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline text-xs"
-                      >
-                        {doc.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             )}
             {siblings.length > 0 && (
               <div className="pt-2">

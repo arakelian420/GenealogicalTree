@@ -7,14 +7,35 @@ export async function PUT(
   context: { params: { id: string } }
 ) {
   const { id } = await context.params;
-  const { photo, ...personData } = await request.json();
-  const person = await prisma.person.update({
-    where: { id },
-    data: {
-      ...personData,
-      ...(photo && { photo }),
-    },
+  const { photo, documents, ...personData } = await request.json();
+
+  const person = await prisma.$transaction(async (tx) => {
+    const updatedPerson = await tx.person.update({
+      where: { id },
+      data: {
+        ...personData,
+        ...(photo && { photo }),
+      },
+      include: {
+        documents: true,
+      },
+    });
+
+    if (documents && documents.length > 0) {
+      await tx.document.deleteMany({
+        where: { personId: id },
+      });
+      await tx.document.createMany({
+        data: documents.map((doc: { name: string; url: string }) => ({
+          ...doc,
+          personId: id,
+        })),
+      });
+    }
+
+    return updatedPerson;
   });
+
   return NextResponse.json(person);
 }
 

@@ -11,10 +11,10 @@ import ReactFlow, {
   Background,
   MiniMap,
   Controls,
-  useNodesState,
-  useEdgesState,
   type Node,
   type Edge,
+  type OnNodesChange,
+  type OnEdgesChange,
   type Connection,
   useReactFlow,
   ControlButton,
@@ -57,7 +57,19 @@ interface TreeViewProps {
   tree: Tree & { people: Person[]; relationships: Relationship[] };
   displaySettings: DisplaySettings;
   onUpdateTree: () => void;
+  onEditPerson: (person: Person) => void;
   isLocked: boolean;
+  nodes: Node[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+  onNodePositionChange: (
+    personId: string,
+    position: { x: number; y: number }
+  ) => void;
+  onNodeDragStop: (event: React.MouseEvent, node: Node) => void;
 }
 
 export default function TreeView({
@@ -65,12 +77,19 @@ export default function TreeView({
   displaySettings,
   onUpdateTree,
   isLocked,
+  onEditPerson,
+  nodes,
+  edges,
+  onNodesChange,
+  onEdgesChange,
+  setNodes,
+  setEdges,
+  onNodePositionChange,
+  onNodeDragStop,
 }: TreeViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [showRelationshipManager, setShowRelationshipManager] = useState(false);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
   const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
@@ -89,9 +108,7 @@ export default function TreeView({
         });
         if (response.ok) {
           onUpdateTree();
-          if (selectedPerson?.id === personId) {
-            setSelectedPerson(null);
-          }
+          setSelectedPerson((prev) => (prev?.id === personId ? null : prev));
         } else {
           const { error } = await response.json();
           alert(`Failed to delete person: ${error}`);
@@ -101,7 +118,7 @@ export default function TreeView({
       }
       setPersonToDelete(null);
     },
-    [onUpdateTree, selectedPerson]
+    [onUpdateTree]
   );
 
   const onNodeResizeEnd = async (
@@ -118,143 +135,6 @@ export default function TreeView({
       }),
     });
   };
-
-  const layoutTree = useCallback(
-    (
-      node: HierarchyNode,
-      x: number,
-      y: number
-    ): {
-      maxX: number;
-    } => {
-      const person = node.person as Person;
-      const spouse = node.spouse?.person as Person | undefined;
-      node.x = person.x ?? x;
-      node.y = person.y ?? y;
-      let currentX = node.x;
-      if (node.spouse) {
-        node.spouse.x = spouse?.x ?? node.x + NODE_WIDTH + H_SPACING;
-        node.spouse.y = spouse?.y ?? node.y;
-        currentX = node.spouse.x;
-      }
-      let childX = x;
-      for (const child of node.children) {
-        const { maxX: childMaxX } = layoutTree(child, childX, y + V_SPACING);
-        childX = childMaxX + H_SPACING;
-      }
-      return {
-        maxX: Math.max(currentX, childX),
-      };
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (tree.people.length === 0) {
-      setNodes([]);
-      setEdges([]);
-      return;
-    }
-
-    const connectedIds = new Set<string>();
-    tree.relationships.forEach((r) => {
-      connectedIds.add(r.fromPersonId);
-      connectedIds.add(r.toPersonId);
-    });
-
-    const unconnectedPeople = tree.people.filter(
-      (p: Person) => !connectedIds.has(p.id)
-    );
-    const reactFlowNodes: Node[] = [];
-    const reactFlowEdges: Edge[] = [];
-    let x = 0;
-    let y = 0;
-    for (const person of unconnectedPeople) {
-      reactFlowNodes.push({
-        id: person.id,
-        type: "draggablePerson",
-        position:
-          (person as Person).x !== null && (person as Person).y !== null
-            ? { x: (person as Person).x!, y: (person as Person).y! }
-            : { x, y },
-        style: {
-          width: person.width || "auto",
-          height: person.height || "auto",
-        },
-        data: {
-          person,
-          displaySettings,
-          onSelectPerson: handleSelectPerson,
-          onEditPerson: setEditingPerson,
-          onDeletePerson: setPersonToDelete,
-          onResizeEnd: onNodeResizeEnd,
-          isLocked,
-        },
-      });
-      if ((person as Person).x === null || (person as Person).y === null) {
-        x += NODE_WIDTH + H_SPACING;
-        if (x > 800) {
-          x = 0;
-          y += V_SPACING;
-        }
-      }
-    }
-
-    let yOffset = y > 0 ? y + V_SPACING : 0;
-
-    const childIds = new Set(
-      tree.relationships
-        .filter((r) => r.type === "parent_child")
-        .map((r) => r.toPersonId)
-    );
-
-    const rootPeople = tree.people.filter(
-      (p) => !childIds.has(p.id) && connectedIds.has(p.id)
-    );
-    const processedIds = new Set<string>();
-    const processedNodeIds = new Set<string>();
-    const processedRelationshipIds = new Set<string>();
-
-    for (const rootPerson of rootPeople) {
-      if (!processedIds.has(rootPerson.id)) {
-        const familySubTree = buildTree(
-          tree.people,
-          tree.relationships,
-          rootPerson.id
-        );
-
-        if (familySubTree) {
-          layoutTree(familySubTree, 0, yOffset);
-          yOffset += V_SPACING;
-          const { nodes: newNodes, edges: newEdges } = convertToReactFlow(
-            familySubTree,
-            displaySettings,
-            handleSelectPerson,
-            setEditingPerson,
-            setPersonToDelete,
-            tree.relationships,
-            onNodeResizeEnd,
-            isLocked,
-            processedRelationshipIds,
-            processedNodeIds
-          );
-          reactFlowNodes.push(...newNodes);
-          reactFlowEdges.push(...newEdges);
-        }
-      }
-    }
-    setNodes(reactFlowNodes);
-    setEdges(reactFlowEdges);
-  }, [
-    tree,
-    displaySettings,
-    selectedPerson,
-    onUpdateTree,
-    setNodes,
-    setEdges,
-    deletePerson,
-    layoutTree,
-  ]);
 
   useEffect(() => {
     setNodes((nds) =>
@@ -313,73 +193,6 @@ export default function TreeView({
       });
       onUpdateTree();
     }
-  };
-
-  const onNodeDragStop = async (event: React.MouseEvent, node: Node) => {
-    const spouseEdge = edges.find(
-      (edge) =>
-        (edge.source === node.id || edge.target === node.id) &&
-        tree.relationships.find((r: Relationship) => r.id === edge.id)?.type ===
-          "spouse"
-    );
-
-    if (spouseEdge) {
-      const otherNodeId =
-        spouseEdge.source === node.id ? spouseEdge.target : spouseEdge.source;
-      const otherNode = nodes.find((n) => n.id === otherNodeId);
-
-      if (otherNode) {
-        const newOtherNodePosition = {
-          x: otherNode.position.x,
-          y: otherNode.position.y,
-        };
-        const newThisNodePosition = {
-          x: node.position.x,
-          y: node.position.y,
-        };
-
-        if (
-          Math.abs(node.position.x - otherNode.position.x) <
-          NODE_WIDTH + H_SPACING
-        ) {
-          newThisNodePosition.x = otherNode.position.x;
-          newOtherNodePosition.x = node.position.x;
-
-          await fetch(`/api/relationship/${spouseEdge.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              fromPersonId: spouseEdge.target,
-              toPersonId: spouseEdge.source,
-            }),
-          });
-        }
-        await fetch(`/api/person/${otherNode.id}/position`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            x: newOtherNodePosition.x,
-            y: newOtherNodePosition.y,
-          }),
-        });
-        await fetch(`/api/person/${node.id}/position`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            x: newThisNodePosition.x,
-            y: newThisNodePosition.y,
-          }),
-        });
-        onUpdateTree();
-        return;
-      }
-    }
-
-    await fetch(`/api/person/${node.id}/position`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x: node.position.x, y: node.position.y }),
-    });
   };
 
   const handleToggleLock = async () => {
@@ -527,10 +340,30 @@ export default function TreeView({
                 <p>{selectedPerson.notes}</p>
               </div>
             )}
+            {selectedPerson.documents &&
+              selectedPerson.documents.length > 0 && (
+                <div>
+                  <span className="font-medium">Documents:</span>
+                  <ul className="list-disc list-inside">
+                    {selectedPerson.documents.map((doc) => (
+                      <li key={doc.id}>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          {doc.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
           <div className="mt-6 space-y-2">
             <button
-              onClick={() => setEditingPerson(selectedPerson)}
+              onClick={() => onEditPerson(selectedPerson)}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Edit Person
@@ -544,14 +377,6 @@ export default function TreeView({
           </div>
         </div>
       )}
-
-      <PersonForm
-        isOpen={!!editingPerson}
-        onClose={() => setEditingPerson(null)}
-        tree={tree}
-        onUpdateTree={onUpdateTree}
-        editingPerson={editingPerson}
-      />
 
       <RelationshipManager
         isOpen={showRelationshipManager}

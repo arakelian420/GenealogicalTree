@@ -26,6 +26,7 @@ model Person {
   id          String   @id @default(cuid())
   firstName   String
   lastName    String
+  fatherName  String?
   birthDate   String?
   deathDate   String?
   birthPlace  String?

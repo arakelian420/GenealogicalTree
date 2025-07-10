@@ -13,6 +13,10 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  const trees = await prisma.tree.findMany();
+  const trees = await prisma.tree.findMany({
+    include: {
+      people: true,
+    },
+  });
   return NextResponse.json(trees);
 }

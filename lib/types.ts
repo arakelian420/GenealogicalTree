@@ -1,4 +1,4 @@
-import type { Person as PrismaPerson } from "@prisma/client";
+import type { Person as PrismaPerson, Document } from "@prisma/client";
 
 export interface DisplaySettings {
   showBirthDate: boolean;
@@ -15,4 +15,5 @@ export type Person = PrismaPerson & {
   y?: number | null;
   width?: number | null;
   height?: number | null;
+  documents?: Document[];
 };

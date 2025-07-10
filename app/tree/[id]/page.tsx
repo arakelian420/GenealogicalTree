@@ -1,17 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ReactFlowProvider } from "reactflow";
+import {
+  ReactFlowProvider,
+  useNodesState,
+  useEdgesState,
+  Node,
+  Edge,
+} from "reactflow";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Settings, Plus, Users, Save } from "lucide-react";
 import Link from "next/link";
-import type { Tree, Person, Relationship } from "@prisma/client";
+import type {
+  Tree,
+  Person as PrismaPerson,
+  Relationship,
+  Document,
+} from "@prisma/client";
 import type { DisplaySettings } from "@/lib/types";
+import { layoutTree, convertToReactFlow } from "@/lib/flow-utils";
+import { buildTree } from "@/lib/tree-builder";
 import TreeView from "@/components/tree-view";
 import PersonForm from "@/components/person-form";
 import TreeSettings from "@/components/tree-settings";
+import PersonDetailsModal from "@/components/person-details-modal";
+
+type Person = PrismaPerson & {
+  documents?: Document[];
+};
 
 export default function TreePage() {
   const params = useParams();
@@ -32,6 +50,12 @@ export default function TreePage() {
   });
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
   const fetchTree = useCallback(async () => {
     const response = await fetch(`/api/tree/${treeId}`, { cache: "no-store" });
     if (response.ok) {
@@ -47,6 +71,169 @@ export default function TreePage() {
       fetchTree();
     }
   }, [treeId, fetchTree]);
+
+  useEffect(() => {
+    if (!tree) return;
+
+    const NODE_WIDTH = 200;
+    const H_SPACING = 50;
+    const V_SPACING = 350;
+
+    const connectedIds = new Set<string>();
+    tree.relationships.forEach((r) => {
+      connectedIds.add(r.fromPersonId);
+      connectedIds.add(r.toPersonId);
+    });
+
+    const unconnectedPeople = tree.people.filter(
+      (p: Person) => !connectedIds.has(p.id)
+    );
+    const reactFlowNodes: Node[] = [];
+    const reactFlowEdges: Edge[] = [];
+    let x = 0;
+    let y = 0;
+    for (const person of unconnectedPeople) {
+      reactFlowNodes.push({
+        id: person.id,
+        type: "draggablePerson",
+        position:
+          (person as Person).x !== null && (person as Person).y !== null
+            ? { x: (person as Person).x!, y: (person as Person).y! }
+            : { x, y },
+        style: {
+          width: person.width || "auto",
+          height: person.height || "auto",
+        },
+        data: {
+          person,
+          displaySettings,
+          onSelectPerson: (p: Person) => {
+            setSelectedPerson(p);
+            setIsDetailsModalOpen(true);
+          },
+          onEditPerson: (p: Person) => {
+            setEditingPerson(p);
+            setShowPersonForm(true);
+          },
+          onDeletePerson: (p: Person) => {},
+          onResizeEnd: () => {},
+          isLocked: tree.isLocked,
+        },
+      });
+      if ((person as Person).x === null || (person as Person).y === null) {
+        x += NODE_WIDTH + H_SPACING;
+        if (x > 800) {
+          x = 0;
+          y += V_SPACING;
+        }
+      }
+    }
+
+    let yOffset = y > 0 ? y + V_SPACING : 0;
+
+    const childIds = new Set(
+      tree.relationships
+        .filter((r) => r.type === "parent_child")
+        .map((r) => r.toPersonId)
+    );
+
+    const rootPeople = tree.people.filter(
+      (p) => !childIds.has(p.id) && connectedIds.has(p.id)
+    );
+    const processedIds = new Set<string>();
+    const processedNodeIds = new Set<string>();
+    const processedRelationshipIds = new Set<string>();
+
+    for (const rootPerson of rootPeople) {
+      if (!processedIds.has(rootPerson.id)) {
+        const familySubTree = buildTree(
+          tree.people,
+          tree.relationships,
+          rootPerson.id
+        );
+
+        if (familySubTree) {
+          layoutTree(familySubTree, 0, yOffset);
+          yOffset += V_SPACING;
+          const { nodes: newNodes, edges: newEdges } = convertToReactFlow(
+            familySubTree,
+            displaySettings,
+            (p: Person) => {
+              setSelectedPerson(p);
+              setIsDetailsModalOpen(true);
+            },
+            (p: Person) => {
+              setEditingPerson(p);
+              setShowPersonForm(true);
+            },
+            (p: Person) => {},
+            tree.relationships,
+            () => {},
+            tree.isLocked,
+            processedRelationshipIds,
+            processedNodeIds
+          );
+          reactFlowNodes.push(...newNodes);
+          reactFlowEdges.push(...newEdges);
+        }
+      }
+    }
+    setNodes(reactFlowNodes);
+    setEdges(reactFlowEdges);
+  }, [tree, displaySettings, setNodes, setEdges]);
+
+  const handleUpdatePerson = (updatedPerson: Person) => {
+    if (!tree) return;
+
+    const personExists = tree.people.some((p) => p.id === updatedPerson.id);
+
+    if (personExists) {
+      setTree((prevTree) => {
+        if (!prevTree) return null;
+        return {
+          ...prevTree,
+          people: prevTree.people.map((p) =>
+            p.id === updatedPerson.id
+              ? { ...p, ...updatedPerson, documents: updatedPerson.documents }
+              : p
+          ),
+        };
+      });
+    } else {
+      setTree((prevTree) => {
+        if (!prevTree) return null;
+        return {
+          ...prevTree,
+          people: [...prevTree.people, updatedPerson],
+        };
+      });
+    }
+  };
+
+  const handleNodePositionChange = (
+    personId: string,
+    position: { x: number; y: number }
+  ) => {
+    if (!tree) return;
+    setTree((prevTree) => {
+      if (!prevTree) return null;
+      return {
+        ...prevTree,
+        people: prevTree.people.map((p) =>
+          p.id === personId ? { ...p, x: position.x, y: position.y } : p
+        ),
+      };
+    });
+  };
+
+  const handleNodeDragStop = async (event: React.MouseEvent, node: Node) => {
+    await fetch(`/api/person/${node.id}/position`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x: node.position.x, y: node.position.y }),
+    });
+    handleNodePositionChange(node.id, node.position);
+  };
 
   const handleSave = () => {
     if (!tree) return;
@@ -150,7 +337,19 @@ export default function TreePage() {
                 tree={tree}
                 displaySettings={displaySettings}
                 onUpdateTree={fetchTree}
+                onEditPerson={(person) => {
+                  setEditingPerson(person);
+                  setShowPersonForm(true);
+                }}
                 isLocked={tree.isLocked}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                setNodes={setNodes}
+                setEdges={setEdges}
+                onNodePositionChange={handleNodePositionChange}
+                onNodeDragStop={handleNodeDragStop}
               />
             </ReactFlowProvider>
           </div>
@@ -159,9 +358,13 @@ export default function TreePage() {
 
       <PersonForm
         isOpen={showPersonForm}
-        onClose={() => setShowPersonForm(false)}
+        onClose={() => {
+          setShowPersonForm(false);
+          setEditingPerson(null);
+        }}
         tree={tree}
-        onUpdateTree={fetchTree}
+        onUpdateTree={handleUpdatePerson}
+        editingPerson={editingPerson}
       />
 
       <TreeSettings
@@ -171,6 +374,12 @@ export default function TreePage() {
         onUpdateSettings={setDisplaySettings}
         tree={tree}
         onUpdateTree={fetchTree}
+      />
+
+      <PersonDetailsModal
+        person={selectedPerson}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
       />
     </div>
   );

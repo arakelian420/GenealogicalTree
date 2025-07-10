@@ -5,8 +5,8 @@ export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const personId = params.id;
-  const { parents, spouses } = await request.json();
+  const { id: personId } = await params;
+  const {} = await request.json();
 
   if (!personId) {
     return NextResponse.json(
@@ -39,28 +39,8 @@ export async function PUT(
       });
 
       // 2. Create new parent relationships
-      if (parents && parents.length > 0) {
-        await tx.relationship.createMany({
-          data: parents.map((parentId: string) => ({
-            fromPersonId: parentId,
-            toPersonId: personId,
-            type: "parent_child",
-            treeId: treeId,
-          })),
-        });
-      }
 
       // 3. Create new spouse relationships
-      if (spouses && spouses.length > 0) {
-        await tx.relationship.createMany({
-          data: spouses.map((spouseId: string) => ({
-            fromPersonId: personId,
-            toPersonId: spouseId,
-            type: "spouse",
-            treeId: treeId,
-          })),
-        });
-      }
     });
 
     return NextResponse.json({ message: "Relationships updated successfully" });
