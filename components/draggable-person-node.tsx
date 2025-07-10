@@ -12,7 +12,7 @@ interface DraggablePersonNodeProps {
     displaySettings: DisplaySettings;
     onSelectPerson: (person: Person) => void;
     onEditPerson: (person: Person) => void;
-    onDeletePerson: (personId: string) => void;
+    onDeletePerson: (person: Person) => void;
     onResizeEnd: (personId: string, width: number, height: number) => void;
     isLocked: boolean;
   };
@@ -60,7 +60,7 @@ export default function DraggablePersonNode({
         isSelected={selected}
         onClick={() => onSelectPerson(person)}
         onEdit={() => onEditPerson(person)}
-        onDelete={() => onDeletePerson(person.id)}
+        onDelete={() => onDeletePerson(person)}
         isLocked={isLocked}
       />
       <Handle

@@ -39,3 +39,31 @@ export async function PATCH(
     );
   }
 }
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = await params;
+
+    await prisma.$transaction([
+      prisma.relationship.deleteMany({
+        where: { treeId: id },
+      }),
+      prisma.person.deleteMany({
+        where: { treeId: id },
+      }),
+      prisma.tree.delete({
+        where: { id },
+      }),
+    ]);
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("Failed to delete tree:", error);
+    return NextResponse.json(
+      { error: "Failed to delete tree" },
+      { status: 500 }
+    );
+  }
+}

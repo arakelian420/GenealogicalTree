@@ -21,7 +21,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, TreePine, Users, Calendar, Trash2 } from "lucide-react";
+import {
+  Plus,
+  TreePine,
+  Users,
+  Calendar,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 import Link from "next/link";
 import { type Tree, type Person, type Relationship } from "@prisma/client";
 
@@ -32,6 +39,9 @@ export default function Dashboard() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTreeName, setNewTreeName] = useState("");
   const [newTreeDescription, setNewTreeDescription] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     fetchTrees();
@@ -174,14 +184,53 @@ export default function Dashboard() {
                         </CardDescription>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteTree(tree.id)}
-                      className="text-red-500 hover:text-red-700"
+                    <Dialog
+                      open={showDeleteConfirm === tree.id}
+                      onOpenChange={(isOpen) =>
+                        !isOpen && setShowDeleteConfirm(null)
+                      }
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowDeleteConfirm(tree.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="text-red-500" />
+                            Are you sure?
+                          </DialogTitle>
+                          <DialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete the <strong>{tree.name}</strong> tree and all
+                            of its data.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowDeleteConfirm(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              deleteTree(tree.id);
+                              setShowDeleteConfirm(null);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardHeader>
                 <CardContent>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function PUT(
   request: NextRequest,
@@ -22,16 +23,38 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   const { id } = await context.params;
-  await prisma.$transaction(async (tx) => {
-    await tx.relationship.deleteMany({
-      where: {
-        OR: [{ fromPersonId: id }, { toPersonId: id }],
-      },
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.tree.updateMany({
+        where: { rootPersonId: id },
+        data: { rootPersonId: null },
+      });
+      await tx.relationship.deleteMany({
+        where: {
+          OR: [{ fromPersonId: id }, { toPersonId: id }],
+        },
+      });
+      await tx.document.deleteMany({
+        where: { personId: id },
+      });
+      await tx.person.delete({
+        where: { id },
+      });
     });
-
-    await tx.person.delete({
-      where: { id },
-    });
-  });
-  return new NextResponse(null, { status: 204 });
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return new NextResponse(null, { status: 204 });
+    }
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    console.error("Failed to delete person:", error);
+    return NextResponse.json(
+      { error: `Failed to delete person: ${errorMessage}` },
+      { status: 500 }
+    );
+  }
 }

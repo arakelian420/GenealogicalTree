@@ -20,6 +20,7 @@ import ReactFlow, {
   ControlButton,
 } from "reactflow";
 import {
+  AlertTriangle,
   X,
   Lock,
   Unlock,
@@ -37,6 +38,16 @@ import DraggablePersonNode from "./draggable-person-node";
 import PersonForm from "./person-form";
 import RelationshipManager from "./relationship-manager";
 import RelationshipModal from "./relationship-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "./ui/button";
 
 const NODE_WIDTH = 200;
 const H_SPACING = 50;
@@ -61,6 +72,7 @@ export default function TreeView({
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
+  const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -71,24 +83,23 @@ export default function TreeView({
 
   const deletePerson = useCallback(
     async (personId: string) => {
-      if (window.confirm("Are you sure you want to delete this person?")) {
-        try {
-          const response = await fetch(`/api/person/${personId}`, {
-            method: "DELETE",
-          });
-
-          if (response.ok) {
-            onUpdateTree();
-            if (selectedPerson?.id === personId) {
-              setSelectedPerson(null);
-            }
-          } else {
-            console.error("Failed to delete person:", await response.text());
+      try {
+        const response = await fetch(`/api/person/${personId}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          onUpdateTree();
+          if (selectedPerson?.id === personId) {
+            setSelectedPerson(null);
           }
-        } catch (error) {
-          console.error("Error deleting person:", error);
+        } else {
+          const { error } = await response.json();
+          alert(`Failed to delete person: ${error}`);
         }
+      } catch (error) {
+        console.error("Error deleting person:", error);
       }
+      setPersonToDelete(null);
     },
     [onUpdateTree, selectedPerson]
   );
@@ -175,7 +186,7 @@ export default function TreeView({
           displaySettings,
           onSelectPerson: handleSelectPerson,
           onEditPerson: setEditingPerson,
-          onDeletePerson: deletePerson,
+          onDeletePerson: setPersonToDelete,
           onResizeEnd: onNodeResizeEnd,
           isLocked,
         },
@@ -220,7 +231,7 @@ export default function TreeView({
             displaySettings,
             handleSelectPerson,
             setEditingPerson,
-            deletePerson,
+            setPersonToDelete,
             tree.relationships,
             onNodeResizeEnd,
             isLocked,
@@ -549,6 +560,37 @@ export default function TreeView({
         selectedPerson={selectedPerson}
         onUpdateTree={onUpdateTree}
       />
+      <Dialog
+        open={!!personToDelete}
+        onOpenChange={(isOpen) => !isOpen && setPersonToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="text-red-500" />
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete{" "}
+              <strong>
+                {personToDelete?.firstName} {personToDelete?.lastName}
+              </strong>{" "}
+              and all of their relationships.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPersonToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => personToDelete && deletePerson(personToDelete.id)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -558,7 +600,7 @@ function convertToReactFlow(
   displaySettings: DisplaySettings,
   onSelectPerson: (person: Person) => void,
   onEditPerson: (person: Person) => void,
-  onDeletePerson: (personId: string) => void,
+  onDeletePerson: (person: Person) => void,
   relationships: Relationship[],
   onResizeEnd: (personId: string, width: number, height: number) => void,
   isLocked: boolean,
