@@ -20,6 +20,7 @@ type DisplayablePerson = Person & {
   documents?: Document[];
   facebookUrl?: string | null;
   color?: string | null;
+  fatherName?: string | null;
 };
 
 interface PersonCardProps {
@@ -161,7 +162,7 @@ export default function PersonCard({
           <div className="flex items-center justify-center gap-1">
             {icon}
             <h4 className={`font-semibold text-sm`}>
-              {person.firstName} {person.nickname && `(${person.nickname})`}{" "}
+              {person.firstName} {person.nickname && `(${person.nickname})`}
               {person.lastName}
             </h4>
             {person.facebookUrl && (
@@ -183,12 +184,17 @@ export default function PersonCard({
             {displaySettings.showDeathDate && person.deathDate && (
               <div>Died: {person.deathDate}</div>
             )}
-            {person.currentPlace && <div>Living: {person.currentPlace}</div>}
+            {displaySettings.showCurrentPlace && person.currentPlace && (
+              <div>Living: {person.currentPlace}</div>
+            )}
             {displaySettings.showBirthPlace && person.birthPlace && (
               <div>{person.birthPlace}</div>
             )}
             {displaySettings.showOccupation && person.occupation && (
               <div>{person.occupation}</div>
+            )}
+            {displaySettings.showFatherName && person.fatherName && (
+              <div>Father: {person.fatherName}</div>
             )}
             {siblings.length > 0 && (
               <div className="pt-2">

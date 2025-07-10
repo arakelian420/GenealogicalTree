@@ -92,6 +92,7 @@ export default function TreeView({
   const [showRelationshipManager, setShowRelationshipManager] = useState(false);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
   const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
+  const [edgeToDelete, setEdgeToDelete] = useState<Edge | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -190,13 +191,27 @@ export default function TreeView({
     setNewConnection(null);
   };
 
-  const onEdgeClick = async (event: React.MouseEvent, edge: Edge) => {
-    if (window.confirm("Are you sure you want to delete this relationship?")) {
-      await fetch(`/api/relationship/${edge.id}`, {
+  const onEdgeClick = (event: React.MouseEvent, edge: Edge) => {
+    if (isLocked) return;
+    setEdgeToDelete(edge);
+  };
+
+  const deleteRelationship = async () => {
+    if (!edgeToDelete) return;
+    try {
+      const response = await fetch(`/api/relationship/${edgeToDelete.id}`, {
         method: "DELETE",
       });
-      onUpdateTree();
+      if (response.ok) {
+        onUpdateTree();
+      } else {
+        const { error } = await response.json();
+        alert(`Failed to delete relationship: ${error}`);
+      }
+    } catch (error) {
+      console.error("Error deleting relationship:", error);
     }
+    setEdgeToDelete(null);
   };
 
   const handleToggleLock = async () => {
@@ -419,6 +434,32 @@ export default function TreeView({
               variant="destructive"
               onClick={() => personToDelete && deletePerson(personToDelete.id)}
             >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!edgeToDelete}
+        onOpenChange={(isOpen) => !isOpen && setEdgeToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="text-red-500" />
+              Are you sure?
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the
+              relationship.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEdgeToDelete(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteRelationship}>
               Delete
             </Button>
           </DialogFooter>

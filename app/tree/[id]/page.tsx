@@ -45,6 +45,8 @@ export default function TreePage() {
     showBirthPlace: false,
     showOccupation: false,
     showPhotos: true,
+    showCurrentPlace: true,
+    showFatherName: true,
   });
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -206,6 +208,7 @@ export default function TreePage() {
         };
       });
     }
+    fetchTree();
   };
 
   const handleNodePositionChange = (

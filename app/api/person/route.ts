@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const { treeId, ...personData } = await request.json();
+  const { treeId, documents, ...personData } = await request.json();
   const tree = await prisma.tree.findUnique({
     where: { id: treeId },
   });
@@ -15,6 +15,12 @@ export async function POST(request: Request) {
       ...personData,
       tree: {
         connect: { id: treeId },
+      },
+      documents: {
+        create: documents.map((doc: { name: string; url: string }) => ({
+          name: doc.name,
+          url: doc.url,
+        })),
       },
     },
   });

@@ -6,6 +6,8 @@ export interface DisplaySettings {
   showBirthPlace: boolean;
   showOccupation: boolean;
   showPhotos: boolean;
+  showCurrentPlace: boolean;
+  showFatherName: boolean;
 }
 
 export type Person = PrismaPerson & {

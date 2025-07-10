@@ -100,21 +100,23 @@ export function convertToReactFlow(
             r.toPersonId === node.person.id))
     );
     if (relationship && !processedRelationships.has(relationship.id)) {
-      const fromNode =
-        node.person.id === relationship.fromPersonId ? node : node.spouse;
-      const toNode =
-        node.person.id === relationship.toPersonId ? node : node.spouse;
-      const fromNodeIsLeft = (fromNode.x ?? 0) < (toNode.x ?? 0);
-      edges.push({
-        id: relationship.id,
-        source: relationship.fromPersonId,
-        target: relationship.toPersonId,
-        sourceHandle: fromNodeIsLeft ? "right" : "left",
-        targetHandle: fromNodeIsLeft ? "left" : "right",
-        type: "straight",
-        style: { stroke: "#888", strokeWidth: 2 },
-        zIndex: 1000,
-      });
+      const fromPersonIsNode = node.person.id === relationship.fromPersonId;
+      const fromNode = fromPersonIsNode ? node : node.spouse;
+      const toNode = fromPersonIsNode ? node.spouse : node;
+
+      if (fromNode && toNode) {
+        const fromNodeIsLeft = (fromNode.x ?? 0) < (toNode.x ?? 0);
+        edges.push({
+          id: relationship.id,
+          source: relationship.fromPersonId,
+          target: relationship.toPersonId,
+          sourceHandle: fromNodeIsLeft ? "right" : "left",
+          targetHandle: fromNodeIsLeft ? "left" : "right",
+          type: "default",
+          style: { stroke: "#888", strokeWidth: 2 },
+          zIndex: 1000,
+        });
+      }
       processedRelationships.add(relationship.id);
     }
   }
@@ -154,7 +156,7 @@ export function convertToReactFlow(
         target: child.person.id,
         sourceHandle: "bottom",
         targetHandle: "top",
-        type: "step",
+        type: "default",
         style: { stroke: "#888", strokeWidth: 2 },
       });
       processedRelationships.add(relationship.id);
@@ -176,7 +178,7 @@ export function convertToReactFlow(
         target: node.person.id,
         sourceHandle: "bottom",
         targetHandle: "top",
-        type: "step",
+        type: "default",
         style: { stroke: "#888", strokeWidth: 2 },
       });
       processedRelationships.add(relationship.id);

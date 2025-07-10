@@ -108,6 +108,26 @@ export default function TreeSettings({
                   }
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="show-current-place">Current Places</Label>
+                <Switch
+                  id="show-current-place"
+                  checked={settings.showCurrentPlace}
+                  onCheckedChange={(checked) =>
+                    updateSetting("showCurrentPlace", checked)
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="show-father-name">Father's Names</Label>
+                <Switch
+                  id="show-father-name"
+                  checked={settings.showFatherName}
+                  onCheckedChange={(checked) =>
+                    updateSetting("showFatherName", checked)
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>

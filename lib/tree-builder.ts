@@ -77,14 +77,7 @@ export function buildTree(
       .filter((n): n is HierarchyNode => !!n);
 
     const spouseNode = spousePerson
-      ? {
-          person: spousePerson,
-          parents: [],
-          spouse: null,
-          children: [],
-          modifier: 0,
-          width: 0,
-        }
+      ? buildSpouseNode(spousePerson, new Set())
       : null;
 
     return {
@@ -101,6 +94,30 @@ export function buildTree(
     return {
       person,
       parents: [],
+      spouse: null,
+      children: [],
+      modifier: 0,
+      width: 0,
+    };
+  }
+
+  function buildSpouseNode(
+    person: Person,
+    processedIds: Set<string>
+  ): HierarchyNode | null {
+    if (processedIds.has(person.id)) {
+      return null;
+    }
+    processedIds.add(person.id);
+
+    const parents = getParents(person.id);
+    const parentNodes = parents
+      .map((p) => buildParentNode(p))
+      .filter((n): n is HierarchyNode => !!n);
+
+    return {
+      person,
+      parents: parentNodes,
       spouse: null,
       children: [],
       modifier: 0,
