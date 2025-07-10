@@ -6,8 +6,6 @@ export interface DisplaySettings {
   showBirthPlace: boolean;
   showOccupation: boolean;
   showPhotos: boolean;
-  treeLayout: "vertical" | "horizontal";
-  compactMode: boolean;
 }
 
 export type Person = PrismaPerson & {

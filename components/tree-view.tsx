@@ -137,6 +137,10 @@ export default function TreeView({
   };
 
   useEffect(() => {
+    console.log("Edges in TreeView:", edges);
+  }, [edges]);
+
+  useEffect(() => {
     setNodes((nds) =>
       nds.map((node) => ({
         ...node,
@@ -187,7 +191,6 @@ export default function TreeView({
   };
 
   const onEdgeClick = async (event: React.MouseEvent, edge: Edge) => {
-    if (isLocked) return;
     if (window.confirm("Are you sure you want to delete this relationship?")) {
       await fetch(`/api/relationship/${edge.id}`, {
         method: "DELETE",
@@ -219,8 +222,11 @@ export default function TreeView({
   };
 
   const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
+    fitView({ padding: 0.1 });
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  }, [fitView]);
 
   useEffect(() => {
     const onBeforePrint = () => {
@@ -251,12 +257,12 @@ export default function TreeView({
         fitView
         onPaneClick={() => setSelectedPerson(null)}
         nodesDraggable={!isLocked}
-        nodesConnectable={!isLocked}
-        elementsSelectable={!isLocked}
+        nodesConnectable={true}
+        elementsSelectable={true}
       >
         <Background />
         <Controls
-          className="print:hidden"
+          className="print:hidden flex flex-col space-y-2"
           showZoom={false}
           showFitView={false}
           showInteractive={false}

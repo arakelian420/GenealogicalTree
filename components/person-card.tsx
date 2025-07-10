@@ -72,6 +72,10 @@ export default function PersonCard({
   const { color, icon } = getGenderStyling(person.gender);
 
   const handleClick = () => {
+    if (isLocked) {
+      onClick?.();
+      return;
+    }
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
       clickTimeout.current = null;

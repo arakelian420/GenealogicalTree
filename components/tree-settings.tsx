@@ -37,10 +37,7 @@ export default function TreeSettings({
   tree,
   onUpdateTree,
 }: TreeSettingsProps) {
-  const updateSetting = (
-    key: keyof DisplaySettings,
-    value: boolean | "vertical" | "horizontal"
-  ) => {
+  const updateSetting = (key: keyof DisplaySettings, value: boolean) => {
     onUpdateSettings({
       ...settings,
       [key]: value,
@@ -108,39 +105,6 @@ export default function TreeSettings({
                   checked={settings.showPhotos}
                   onCheckedChange={(checked) =>
                     updateSetting("showPhotos", checked)
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-medium mb-4">Layout Options</h4>
-            <div className="space-y-3">
-              <div>
-                <Label>Tree Layout</Label>
-                <Select
-                  value={settings.treeLayout}
-                  onValueChange={(value: "vertical" | "horizontal") =>
-                    updateSetting("treeLayout", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="vertical">Vertical</SelectItem>
-                    <SelectItem value="horizontal">Horizontal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="compact-mode">Compact Mode</Label>
-                <Switch
-                  id="compact-mode"
-                  checked={settings.compactMode}
-                  onCheckedChange={(checked) =>
-                    updateSetting("compactMode", checked)
                   }
                 />
               </div>

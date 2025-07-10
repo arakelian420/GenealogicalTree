@@ -45,8 +45,6 @@ export default function TreePage() {
     showBirthPlace: false,
     showOccupation: false,
     showPhotos: true,
-    treeLayout: "vertical",
-    compactMode: false,
   });
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -236,17 +234,7 @@ export default function TreePage() {
   };
 
   const handleSave = () => {
-    if (!tree) return;
-    const dataStr = JSON.stringify(tree, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${tree.name.replace(/\s/g, "_")}_family_tree.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    window.print();
   };
 
   if (!tree) {
@@ -304,7 +292,12 @@ export default function TreePage() {
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
-              <Button variant="outline" size="sm" onClick={handleSave}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+                disabled={!tree}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Save
               </Button>

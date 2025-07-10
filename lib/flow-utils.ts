@@ -112,7 +112,7 @@ export function convertToReactFlow(
         sourceHandle: fromNodeIsLeft ? "right" : "left",
         targetHandle: fromNodeIsLeft ? "left" : "right",
         type: "straight",
-        style: { strokeWidth: 2 },
+        style: { stroke: "#888", strokeWidth: 2 },
         zIndex: 1000,
       });
       processedRelationships.add(relationship.id);
@@ -155,6 +155,7 @@ export function convertToReactFlow(
         sourceHandle: "bottom",
         targetHandle: "top",
         type: "step",
+        style: { stroke: "#888", strokeWidth: 2 },
       });
       processedRelationships.add(relationship.id);
     }
@@ -176,6 +177,7 @@ export function convertToReactFlow(
         sourceHandle: "bottom",
         targetHandle: "top",
         type: "step",
+        style: { stroke: "#888", strokeWidth: 2 },
       });
       processedRelationships.add(relationship.id);
     }

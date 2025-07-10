@@ -41,18 +41,19 @@ export default function DraggablePersonNode({
         onResizeEnd={(event, params) =>
           onResizeEnd(person.id, params.width, params.height)
         }
+        isVisible={!isLocked}
       />
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        style={{ top: "-5px" }}
+        style={{ top: "-5px", visibility: isLocked ? "hidden" : "visible" }}
       />
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        style={{ left: "-5px" }}
+        style={{ left: "-5px", visibility: isLocked ? "hidden" : "visible" }}
       />
       <PersonCard
         person={person}
@@ -67,13 +68,13 @@ export default function DraggablePersonNode({
         type="source"
         position={Position.Bottom}
         id="bottom"
-        style={{ bottom: "-5px" }}
+        style={{ bottom: "-5px", visibility: isLocked ? "hidden" : "visible" }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        style={{ right: "-5px" }}
+        style={{ right: "-5px", visibility: isLocked ? "hidden" : "visible" }}
       />
     </div>
   );
