@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { unstable_getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await unstable_getServerSession(authOptions);
+  const id = request.url.split("/").pop() as string;
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const relationship = await prisma.relationship.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { tree: true },
   });
 
@@ -30,7 +31,7 @@ export async function DELETE(
   }
 
   await prisma.relationship.delete({
-    where: { id: params.id },
+    where: { id },
   });
   return new NextResponse(null, { status: 204 });
 }
@@ -39,13 +40,14 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await unstable_getServerSession(authOptions);
+  const id = request.url.split("/").pop() as string;
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const relationship = await prisma.relationship.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { tree: true },
   });
 
@@ -62,7 +64,7 @@ export async function PATCH(
   }
   const { fromPersonId, toPersonId } = await request.json();
   const updatedRelationship = await prisma.relationship.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       fromPersonId,
       toPersonId,

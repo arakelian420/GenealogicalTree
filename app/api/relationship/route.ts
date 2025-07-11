@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { unstable_getServerSession } from "next-auth/next";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(request: Request) {
-  const session = await unstable_getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -21,6 +21,22 @@ export async function POST(request: Request) {
   if (tree?.isLocked) {
     return new NextResponse("Tree is locked", { status: 403 });
   }
+  const existingRelationship = await prisma.relationship.findFirst({
+    where: {
+      fromPersonId,
+      toPersonId,
+      type,
+      treeId,
+    },
+  });
+
+  if (existingRelationship) {
+    return NextResponse.json(
+      { error: "Relationship already exists" },
+      { status: 409 }
+    );
+  }
+
   const relationship = await prisma.relationship.create({
     data: {
       type,

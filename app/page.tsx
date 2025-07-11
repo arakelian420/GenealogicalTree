@@ -149,6 +149,13 @@ export default function Dashboard() {
             <p className="text-sm text-gray-700">
               Signed in as <strong>{session?.user?.email}</strong>
             </p>
+            {session?.user?.role === "admin" && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm">
+                  Admin Panel
+                </Button>
+              </Link>
+            )}
             <Button onClick={() => signOut()} variant="outline" size="sm">
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out

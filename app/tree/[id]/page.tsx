@@ -80,7 +80,7 @@ export default function TreePage() {
     const V_SPACING = 350;
 
     const connectedIds = new Set<string>();
-    tree.relationships.forEach((r) => {
+    tree.relationships.forEach((r: Relationship) => {
       connectedIds.add(r.fromPersonId);
       connectedIds.add(r.toPersonId);
     });
@@ -133,12 +133,12 @@ export default function TreePage() {
 
     const childIds = new Set(
       tree.relationships
-        .filter((r) => r.type === "parent_child")
-        .map((r) => r.toPersonId)
+        .filter((r: Relationship) => r.type === "parent_child")
+        .map((r: Relationship) => r.toPersonId)
     );
 
     const rootPeople = tree.people.filter(
-      (p) => !childIds.has(p.id) && connectedIds.has(p.id)
+      (p: Person) => !childIds.has(p.id) && connectedIds.has(p.id)
     );
     const processedIds = new Set<string>();
     const processedNodeIds = new Set<string>();
@@ -174,41 +174,98 @@ export default function TreePage() {
             processedNodeIds
           );
           reactFlowNodes.push(...newNodes);
-          reactFlowEdges.push(...newEdges);
         }
       }
     }
+
+    const allEdges: Edge[] = [];
+    const addedEdges = new Set<string>();
+
+    for (const rel of tree.relationships) {
+      if (addedEdges.has(rel.id)) continue;
+
+      const sourceNode = reactFlowNodes.find((n) => n.id === rel.fromPersonId);
+      const targetNode = reactFlowNodes.find((n) => n.id === rel.toPersonId);
+
+      if (sourceNode && targetNode) {
+        let edge: Edge;
+        if (rel.type === "spouse") {
+          const fromNodeIsLeft = sourceNode.position.x < targetNode.position.x;
+          edge = {
+            id: rel.id,
+            source: rel.fromPersonId,
+            target: rel.toPersonId,
+            type: "default",
+            sourceHandle: fromNodeIsLeft ? "right" : "left",
+            targetHandle: fromNodeIsLeft ? "left" : "right",
+            style: { strokeWidth: 2 },
+            zIndex: 1000,
+          };
+        } else {
+          edge = {
+            id: rel.id,
+            source: rel.fromPersonId,
+            target: rel.toPersonId,
+            type: "default",
+            sourceHandle: "bottom",
+            targetHandle: "top",
+          };
+        }
+        allEdges.push(edge);
+        addedEdges.add(rel.id);
+      }
+    }
+
     setNodes(reactFlowNodes);
-    setEdges(reactFlowEdges);
+    setEdges(allEdges);
   }, [tree, displaySettings, setNodes, setEdges]);
 
   const handleUpdatePerson = (updatedPerson: Person) => {
     if (!tree) return;
 
-    const personExists = tree.people.some((p) => p.id === updatedPerson.id);
+    const personExists = tree.people.some(
+      (p: Person) => p.id === updatedPerson.id
+    );
 
     if (personExists) {
-      setTree((prevTree) => {
-        if (!prevTree) return null;
-        return {
-          ...prevTree,
-          people: prevTree.people.map((p) =>
-            p.id === updatedPerson.id
-              ? { ...p, ...updatedPerson, documents: updatedPerson.documents }
-              : p
-          ),
-        };
-      });
+      setTree(
+        (
+          prevTree:
+            | (Tree & {
+                people: Person[];
+                relationships: Relationship[];
+              })
+            | null
+        ) => {
+          if (!prevTree) return null;
+          return {
+            ...prevTree,
+            people: prevTree.people.map((p: Person) =>
+              p.id === updatedPerson.id
+                ? { ...p, ...updatedPerson, documents: updatedPerson.documents }
+                : p
+            ),
+          };
+        }
+      );
     } else {
-      setTree((prevTree) => {
-        if (!prevTree) return null;
-        return {
-          ...prevTree,
-          people: [...prevTree.people, updatedPerson],
-        };
-      });
+      setTree(
+        (
+          prevTree:
+            | (Tree & {
+                people: Person[];
+                relationships: Relationship[];
+              })
+            | null
+        ) => {
+          if (!prevTree) return null;
+          return {
+            ...prevTree,
+            people: [...prevTree.people, updatedPerson],
+          };
+        }
+      );
     }
-    fetchTree();
   };
 
   const handleNodePositionChange = (
@@ -216,22 +273,35 @@ export default function TreePage() {
     position: { x: number; y: number }
   ) => {
     if (!tree) return;
-    setTree((prevTree) => {
-      if (!prevTree) return null;
-      return {
-        ...prevTree,
-        people: prevTree.people.map((p) =>
-          p.id === personId ? { ...p, x: position.x, y: position.y } : p
-        ),
-      };
-    });
+    setTree(
+      (
+        prevTree:
+          | (Tree & {
+              people: Person[];
+              relationships: Relationship[];
+            })
+          | null
+      ) => {
+        if (!prevTree) return null;
+        return {
+          ...prevTree,
+          people: prevTree.people.map((p: Person) =>
+            p.id === personId ? { ...p, x: position.x, y: position.y } : p
+          ),
+        };
+      }
+    );
   };
 
   const handleNodeDragStop = async (event: React.MouseEvent, node: Node) => {
-    await fetch(`/api/person/${node.id}/position`, {
+    await fetch(`/api/person/position`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x: node.position.x, y: node.position.y }),
+      body: JSON.stringify({
+        personIds: [node.id],
+        x: node.position.x,
+        y: node.position.y,
+      }),
     });
     handleNodePositionChange(node.id, node.position);
   };

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -87,7 +88,12 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <Link href="/">
+          <Button variant="outline">Return to Dashboard</Button>
+        </Link>
+      </div>
 
       <div className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">Users</h2>

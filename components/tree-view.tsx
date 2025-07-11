@@ -100,6 +100,7 @@ export default function TreeView({
   const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
   const [edgeToDelete, setEdgeToDelete] = useState<Edge | null>(null);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
+  const [isDeleting, setIsDeleting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
 
@@ -170,6 +171,9 @@ export default function TreeView({
   useEffect(() => {
     console.log("Edges in TreeView:", edges);
   }, [edges]);
+  useEffect(() => {
+    console.log("Edges in TreeView:", edges);
+  }, [edges]);
 
   useEffect(() => {
     setNodes((nds) =>
@@ -207,7 +211,7 @@ export default function TreeView({
       }
     }
 
-    await fetch("/api/relationship", {
+    const response = await fetch("/api/relationship", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -217,7 +221,14 @@ export default function TreeView({
         type,
       }),
     });
-    onUpdateTree();
+
+    if (response.ok) {
+      onUpdateTree();
+    } else if (response.status === 409) {
+      const { error } = await response.json();
+      alert(error);
+    }
+
     setNewConnection(null);
   };
 
@@ -227,7 +238,8 @@ export default function TreeView({
   };
 
   const deleteRelationship = async () => {
-    if (!edgeToDelete) return;
+    if (!edgeToDelete || isDeleting) return;
+    setIsDeleting(true);
     try {
       const response = await fetch(`/api/relationship/${edgeToDelete.id}`, {
         method: "DELETE",
@@ -235,13 +247,15 @@ export default function TreeView({
       if (response.ok) {
         onUpdateTree();
       } else {
-        const { error } = await response.json();
-        alert(`Failed to delete relationship: ${error}`);
+        const errorText = await response.text();
+        alert(`Failed to delete relationship: ${errorText}`);
       }
     } catch (error) {
       console.error("Error deleting relationship:", error);
+    } finally {
+      setIsDeleting(false);
+      setEdgeToDelete(null);
     }
-    setEdgeToDelete(null);
   };
 
   const handleToggleLock = async () => {
@@ -491,8 +505,12 @@ export default function TreeView({
             <Button variant="outline" onClick={() => setEdgeToDelete(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={deleteRelationship}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={deleteRelationship}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
