@@ -26,6 +26,7 @@ import TreeView from "@/components/tree-view";
 import PersonForm from "@/components/person-form";
 import TreeSettings from "@/components/tree-settings";
 import PersonDetailsModal from "@/components/person-details-modal";
+import ConfirmationDialog from "@/components/confirmation-dialog";
 
 type Person = PrismaPerson & {
   documents?: Document[];
@@ -55,6 +56,42 @@ export default function TreePage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
+    useState(false);
+  const [deletingPerson, setDeletingPerson] = useState<Person | null>(null);
+
+  const handleDeletePerson = (person: Person) => {
+    setDeletingPerson(person);
+    setIsConfirmDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePerson = async () => {
+    if (!deletingPerson) return;
+
+    const response = await fetch(`/api/person/${deletingPerson.id}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setTree((prevTree) => {
+        if (!prevTree) return null;
+        return {
+          ...prevTree,
+          people: prevTree.people.filter((p) => p.id !== deletingPerson.id),
+          relationships: prevTree.relationships.filter(
+            (r) =>
+              r.fromPersonId !== deletingPerson.id &&
+              r.toPersonId !== deletingPerson.id
+          ),
+        };
+      });
+    } else {
+      console.error("Failed to delete person");
+    }
+
+    setDeletingPerson(null);
+    setIsConfirmDeleteDialogOpen(false);
+  };
 
   const fetchTree = useCallback(async () => {
     const response = await fetch(`/api/tree/${treeId}`, { cache: "no-store" });
@@ -115,7 +152,7 @@ export default function TreePage() {
             setEditingPerson(p);
             setShowPersonForm(true);
           },
-          onDeletePerson: (p: Person) => {},
+          onDeletePerson: (p: Person) => handleDeletePerson(p),
           onResizeEnd: () => {},
           isLocked: tree.isLocked,
         },
@@ -166,7 +203,7 @@ export default function TreePage() {
               setEditingPerson(p);
               setShowPersonForm(true);
             },
-            (p: Person) => {},
+            (p: Person) => handleDeletePerson(p),
             tree.relationships,
             () => {},
             tree.isLocked,
@@ -446,6 +483,13 @@ export default function TreePage() {
         person={selectedPerson}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
+      />
+      <ConfirmationDialog
+        isOpen={isConfirmDeleteDialogOpen}
+        onClose={() => setIsConfirmDeleteDialogOpen(false)}
+        onConfirm={confirmDeletePerson}
+        title={`Delete ${deletingPerson?.firstName} ${deletingPerson?.lastName}?`}
+        description="Are you sure you want to delete this person? This will also remove all their relationships. This action cannot be undone."
       />
     </div>
   );
