@@ -6,7 +6,15 @@ import type { DisplaySettings } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { Edit, Trash2, User, Mars, Venus, Facebook } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  User,
+  Mars,
+  Venus,
+  Facebook,
+  Instagram,
+} from "lucide-react";
 
 interface Document {
   id: string;
@@ -19,6 +27,7 @@ type DisplayablePerson = Person & {
   currentPlace?: string | null;
   documents?: Document[];
   facebookUrl?: string | null;
+  instagramUrl?: string | null;
   color?: string | null;
   fatherName?: string | null;
 };
@@ -173,6 +182,16 @@ export default function PersonCard({
                 onClick={(e) => e.stopPropagation()}
               >
                 <Facebook className="h-4 w-4 text-blue-600 hover:text-blue-800" />
+              </a>
+            )}
+            {(person as any).instagramUrl && (
+              <a
+                href={(person as any).instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Instagram className="h-4 w-4 text-pink-600 hover:text-pink-800" />
               </a>
             )}
           </div>

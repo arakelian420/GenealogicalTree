@@ -41,6 +41,7 @@ model Person {
   nickname          String?
   currentPlace      String?
   facebookUrl       String?
+  instagramUrl      String?
   color             String?
   treeId            String
   tree              Tree           @relation(fields: [treeId], references: [id])
@@ -71,7 +72,6 @@ model Relationship {
 enum Gender {
   male
   female
-  other
 }
 
 enum RelationshipType {

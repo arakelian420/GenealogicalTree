@@ -47,6 +47,7 @@ type EditablePerson = Person & {
   currentPlace?: string | null;
   documents?: Document[];
   facebookUrl?: string | null;
+  instagramUrl?: string | null;
   fatherName?: string | null;
   color?: string | null;
 };
@@ -79,6 +80,7 @@ export default function PersonForm({
     nickname: "",
     currentPlace: "",
     facebookUrl: "",
+    instagramUrl: "",
     fatherName: "",
     color: "",
   });
@@ -100,6 +102,7 @@ export default function PersonForm({
         nickname: editingPerson.nickname || "",
         currentPlace: editingPerson.currentPlace || "",
         facebookUrl: editingPerson.facebookUrl || "",
+        instagramUrl: (editingPerson as any).instagramUrl || "",
         fatherName: editingPerson.fatherName || "",
         color: editingPerson.color || "",
       });
@@ -122,6 +125,7 @@ export default function PersonForm({
         nickname: "",
         currentPlace: "",
         facebookUrl: "",
+        instagramUrl: "",
         fatherName: "",
         color: "",
       });
@@ -253,28 +257,32 @@ export default function PersonForm({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="fatherName">Father's Name</Label>
-            <Input
-              id="fatherName"
-              value={formData.fatherName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, fatherName: e.target.value }))
-              }
-              placeholder="Father's full name"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="nickname">Nickname</Label>
-            <Input
-              id="nickname"
-              value={formData.nickname}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, nickname: e.target.value }))
-              }
-              placeholder="e.g. Johnny"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="fatherName">Father's Name</Label>
+              <Input
+                id="fatherName"
+                value={formData.fatherName}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    fatherName: e.target.value,
+                  }))
+                }
+                placeholder="Father's full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="nickname">Nickname</Label>
+              <Input
+                id="nickname"
+                value={formData.nickname}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, nickname: e.target.value }))
+                }
+                placeholder="e.g. Johnny"
+              />
+            </div>
           </div>
 
           <div>
@@ -291,56 +299,53 @@ export default function PersonForm({
             )}
           </div>
 
-          <div>
-            <Label htmlFor="gender">Gender</Label>
-            <Select
-              value={formData.gender}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, gender: value as Gender }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="color">Node Color</Label>
-            <Input
-              id="color"
-              type="color"
-              value={formData.color}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, color: e.target.value }))
-              }
-              className="w-full h-10"
-            />
-            <div className="flex gap-2 mt-2">
-              {[
-                "#a8dadc",
-                "#457b9d",
-                "#1d3557",
-                "#f4a261",
-                "#e76f51",
-                "#e9c46a",
-                "#eff6ff",
-                "#fdf2f8",
-              ].map((color) => (
-                <div
-                  key={color}
-                  className="w-6 h-6 rounded-full cursor-pointer"
-                  style={{ backgroundColor: color }}
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, color: color }))
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="gender">Gender</Label>
+              <Select
+                value={formData.gender}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, gender: value as Gender }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="color">Node Color</Label>
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  id="color"
+                  type="color"
+                  value={formData.color}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, color: e.target.value }))
                   }
+                  className="w-10 h-10 p-1"
                 />
-              ))}
+                <div className="flex flex-wrap gap-2">
+                  {["#74b9ff", "#a29bfe", "#ffdd59", "#ff7675"].map((color) => (
+                    <div
+                      key={color}
+                      className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
+                        formData.color === color
+                          ? "border-blue-500"
+                          : "border-transparent"
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, color: color }))
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -375,31 +380,35 @@ export default function PersonForm({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="birthPlace">Birth Place</Label>
-            <Input
-              id="birthPlace"
-              value={formData.birthPlace}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, birthPlace: e.target.value }))
-              }
-              placeholder="City, State, Country"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="currentPlace">Place of Living</Label>
-            <Input
-              id="currentPlace"
-              value={formData.currentPlace}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  currentPlace: e.target.value,
-                }))
-              }
-              placeholder="City, State, Country"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="birthPlace">Birth Place</Label>
+              <Input
+                id="birthPlace"
+                value={formData.birthPlace}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    birthPlace: e.target.value,
+                  }))
+                }
+                placeholder="City, State, Country"
+              />
+            </div>
+            <div>
+              <Label htmlFor="currentPlace">Place of Living</Label>
+              <Input
+                id="currentPlace"
+                value={formData.currentPlace}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    currentPlace: e.target.value,
+                  }))
+                }
+                placeholder="City, State, Country"
+              />
+            </div>
           </div>
 
           <div>
@@ -414,19 +423,35 @@ export default function PersonForm({
             />
           </div>
 
-          <div>
-            <Label htmlFor="facebookUrl">Facebook Profile URL</Label>
-            <Input
-              id="facebookUrl"
-              value={formData.facebookUrl}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  facebookUrl: e.target.value,
-                }))
-              }
-              placeholder="https://facebook.com/..."
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="facebookUrl">Facebook Profile URL</Label>
+              <Input
+                id="facebookUrl"
+                value={formData.facebookUrl}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    facebookUrl: e.target.value,
+                  }))
+                }
+                placeholder="https://facebook.com/..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="instagramUrl">Instagram Profile URL</Label>
+              <Input
+                id="instagramUrl"
+                value={(formData as any).instagramUrl}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    instagramUrl: e.target.value,
+                  }))
+                }
+                placeholder="https://instagram.com/..."
+              />
+            </div>
           </div>
 
           <div>
