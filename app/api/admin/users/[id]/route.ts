@@ -5,9 +5,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
+  const { id } = await context.params;
 
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +17,7 @@ export async function PATCH(
   const { status } = await request.json();
 
   const user = await prisma.user.update({
-    where: { id: params.id },
+    where: { id },
     data: { status },
   });
 
@@ -25,16 +26,17 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
+  const { id } = await context.params;
 
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   await prisma.user.delete({
-    where: { id: params.id },
+    where: { id },
   });
 
   return new NextResponse(null, { status: 204 });

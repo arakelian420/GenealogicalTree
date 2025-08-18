@@ -5,16 +5,17 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
+  const { id } = await context.params;
 
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   await prisma.tree.delete({
-    where: { id: params.id },
+    where: { id },
   });
 
   return new NextResponse(null, { status: 204 });

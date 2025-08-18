@@ -11,19 +11,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { EnFlag } from "./icons/en-flag";
 import { RuFlag } from "./icons/ru-flag";
-import { AmFlag } from "./icons/am-flag";
+import { HyFlag } from "./icons/hy-flag";
 
 const localeIcons: Record<string, React.ComponentType> = {
   en: EnFlag,
   ru: RuFlag,
-  am: AmFlag,
+  hy: HyFlag,
 };
 
 export function LocaleSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
-  const locales = ["en", "ru", "am"];
+  const locales = ["en", "ru", "hy"];
 
   const CurrentFlag = localeIcons[locale];
 

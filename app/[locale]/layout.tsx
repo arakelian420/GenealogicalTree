@@ -3,7 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
-import { locales } from "@/i18n";
+import { locales, formats } from "@/i18n";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export function generateStaticParams() {
@@ -36,11 +36,14 @@ export default async function RootLayout({
 
   // 4) Load messages (next-intl will use the request locale)
   const messages = await getMessages({ locale });
-
   return (
     <html lang={locale}>
       <body className={inter.className}>
-        <NextIntlClientProvider messages={messages} locale={locale}>
+        <NextIntlClientProvider
+          messages={messages}
+          locale={locale}
+          formats={formats}
+        >
           <div className="absolute top-4 right-4">
             <LocaleSwitcher />
           </div>

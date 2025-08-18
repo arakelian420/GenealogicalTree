@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id: personId } = await params;
+  const { id: personId } = await context.params;
   const {} = await request.json();
 
   if (!personId) {

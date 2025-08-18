@@ -1,5 +1,5 @@
-// components/icons/am-flag.tsx
-export const AmFlag = () => (
+// components/icons/hy-flag.tsx
+export const HyFlag = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
