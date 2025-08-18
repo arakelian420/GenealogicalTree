@@ -4,6 +4,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import { locales } from "@/i18n";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -40,6 +41,9 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages} locale={locale}>
+          <div className="absolute top-4 right-4">
+            <LocaleSwitcher />
+          </div>
           {children}
         </NextIntlClientProvider>
       </body>
