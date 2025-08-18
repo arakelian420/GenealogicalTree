@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,
@@ -52,13 +52,13 @@ export default function RelationshipManager({
     Relationship[]
   >([]);
 
-  useState(() => {
+  useEffect(() => {
     if (selectedPerson) {
       fetch(`/api/person/${selectedPerson.id}/relationships`)
         .then((res) => res.json())
         .then(setCurrentRelationships);
     }
-  });
+  }, [selectedPerson]);
 
   if (!selectedPerson) return null;
 
