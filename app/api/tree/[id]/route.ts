@@ -12,18 +12,35 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const { id } = params;
+
   const tree = await prisma.tree.findUnique({
     where: { id_userId: { id, userId: session.user.id } },
     include: {
       people: true,
-      relationships: true,
     },
   });
+
   if (!tree) {
     return new NextResponse("Tree not found", { status: 404 });
   }
-  return NextResponse.json(tree);
+
+  const personIds = tree.people.map((p) => p.id);
+
+  const relationships =
+    personIds.length > 0
+      ? await prisma.relationship.findMany({
+          where: {
+            treeId: id,
+            OR: [
+              { fromPersonId: { in: personIds } },
+              { toPersonId: { in: personIds } },
+            ],
+          },
+        })
+      : [];
+
+  return NextResponse.json({ ...tree, relationships });
 }
 
 export async function PATCH(
@@ -36,7 +53,7 @@ export async function PATCH(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
     const { isLocked } = await request.json();
     const tree = await prisma.tree.update({
       where: { id_userId: { id, userId: session.user.id } },
@@ -61,7 +78,7 @@ export async function DELETE(
   }
 
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const tree = await prisma.tree.findUnique({
       where: { id_userId: { id, userId: session.user.id } },

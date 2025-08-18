@@ -7,9 +7,13 @@ import PersonCard from "./person-card";
 import { Handle, Position, NodeResizer } from "reactflow";
 import type { DisplaySettings } from "@/lib/types";
 
+import type { Relationship } from "@prisma/client";
+
 interface DraggablePersonNodeProps {
   data: {
     person: Person;
+    persons: Person[];
+    relationships: Relationship[];
     displaySettings: DisplaySettings;
     onSelectPerson: (person: Person) => void;
     onEditPerson: (person: Person) => void;
@@ -27,6 +31,8 @@ export default function DraggablePersonNode({
   const t = useTranslations("a11y");
   const {
     person,
+    persons,
+    relationships,
     displaySettings,
     onSelectPerson,
     onEditPerson,
@@ -59,6 +65,8 @@ export default function DraggablePersonNode({
       />
       <PersonCard
         person={person}
+        persons={persons}
+        relationships={relationships}
         displaySettings={displaySettings}
         isSelected={selected}
         onClick={() => onSelectPerson(person)}

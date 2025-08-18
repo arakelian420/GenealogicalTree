@@ -525,6 +525,7 @@ function convertToReactFlow(
   onSelectPerson: (person: Person) => void,
   onEditPerson: (person: Person) => void,
   onDeletePerson: (person: Person) => void,
+  persons: Person[],
   relationships: Relationship[],
   onResizeEnd: (personId: string, width: number, height: number) => void,
   isLocked: boolean,
@@ -545,6 +546,8 @@ function convertToReactFlow(
       },
       data: {
         person: node.person,
+        persons,
+        relationships,
         displaySettings,
         onSelectPerson,
         onEditPerson,
@@ -568,6 +571,8 @@ function convertToReactFlow(
         },
         data: {
           person: node.spouse.person,
+          persons,
+          relationships,
           displaySettings,
           onSelectPerson,
           onEditPerson,
@@ -613,6 +618,7 @@ function convertToReactFlow(
       onSelectPerson,
       onEditPerson,
       onDeletePerson,
+      persons,
       relationships,
       onResizeEnd,
       isLocked,

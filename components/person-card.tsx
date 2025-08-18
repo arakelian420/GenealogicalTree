@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import type { Person } from "@prisma/client";
+import { useMemo, useRef } from "react";
+import type { Person, Relationship } from "@prisma/client";
 import { useTranslations } from "next-intl";
 import type { DisplaySettings } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,8 @@ type DisplayablePerson = Person & {
 
 interface PersonCardProps {
   person: DisplayablePerson;
+  persons: DisplayablePerson[];
+  relationships: Relationship[];
   displaySettings: DisplaySettings;
   isSelected?: boolean;
   onClick?: () => void;
@@ -45,6 +47,8 @@ interface PersonCardProps {
 
 export default function PersonCard({
   person,
+  persons,
+  relationships,
   displaySettings,
   isSelected = false,
   onClick,
@@ -53,14 +57,28 @@ export default function PersonCard({
   isLocked = false,
 }: PersonCardProps) {
   const t = useTranslations("person");
-  const [siblings, setSiblings] = useState<Person[]>([]);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/person/${person.id}/siblings`)
-      .then((res) => res.json())
-      .then(setSiblings);
-  }, [person.id]);
+  const siblings = useMemo(() => {
+    const parentRelationships = (relationships || []).filter(
+      (r) => r.toPersonId === person.id && r.type === "parent_child"
+    );
+    const parentIds = parentRelationships.map((r) => r.fromPersonId);
+
+    if (parentIds.length === 0) {
+      return [];
+    }
+
+    const siblingRelationships = (relationships || []).filter(
+      (r) =>
+        parentIds.includes(r.fromPersonId) &&
+        r.type === "parent_child" &&
+        r.toPersonId !== person.id
+    );
+    const siblingIds = siblingRelationships.map((r) => r.toPersonId);
+
+    return persons.filter((p) => siblingIds.includes(p.id));
+  }, [person.id, persons, relationships]);
 
   const getGenderStyling = (
     gender?: Person["gender"],

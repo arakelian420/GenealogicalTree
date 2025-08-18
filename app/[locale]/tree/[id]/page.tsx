@@ -145,6 +145,8 @@ export default function TreePage() {
         },
         data: {
           person,
+          persons: tree.people,
+          relationships: tree.relationships,
           displaySettings,
           onSelectPerson: (p: Person) => {
             setSelectedPerson(p);
@@ -206,6 +208,7 @@ export default function TreePage() {
               setShowPersonForm(true);
             },
             (p: Person) => handleDeletePerson(p),
+            tree.people,
             tree.relationships,
             () => {},
             tree.isLocked,

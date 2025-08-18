@@ -20,11 +20,11 @@
     "unknown": "Անհայտ"
   },
   "home": {
-    "title": "Ընտանեկան ծառի կառավարիչ",
-    "signInPrompt": "Խնդրում ենք մուտք գործել՝ ձեր ընտանեկան ծառերը կառավարելու համար։",
-    "subtitle": "Ստեղծեք և կառավարեք ձեր ընտանեկան տոհմածառը",
+    "title": "ՏՈՀՄԱԾԱՌ",
+    "signInPrompt": "Խնդրում ենք մուտք գործել՝ ձեր տոհմածառերը կառավարելու համար։",
+    "subtitle": "Ստեղծեք և կառավարեք ձեր տոհմածառը",
     "signedInAs": "Դուք մուտք եք գործել որպես",
-    "yourTrees": "Ձեր ընտանեկան ծառերը"
+    "yourTrees": "Ձեր տոհմածառերը"
   },
   "auth": {
     "title": "Մուտք գործեք ձեր հաշիվ",
@@ -38,7 +38,7 @@
     "register": "Գրանցվել",
     "waitForApproval": "Գրանցումը հաջողվեց։ Խնդրում ենք սպասել ադմինիստրատորի հաստատմանը։",
     "signInFailed": "Մուտքը ձախողվեց։ Ստուգեք ձեր մուտքագրած տվյալների ճշտությունը։",
-    "accessYourTrees": "Մուտք գործեք ձեր ընտանեկան ծառեր",
+    "accessYourTrees": "Մուտք գործեք ձեր տոհմածառեր",
     "noAccount": "Հաշիվ չունե՞ք։",
     "errors": {
       "required": "Այս դաշտը պարտադիր է",
@@ -57,26 +57,26 @@
     "lastName": "Ազգանուն *",
     "lastNamePlaceholder": "Ազգանուն",
     "fatherName": "Հայրանուն",
-    "fatherNamePlaceholder": "Հոր լրիվ անունը",
+    "fatherNamePlaceholder": "Հայրանուն",
     "nickname": "Մականուն",
-    "nicknamePlaceholder": "օրինակ՝ Ջոնի",
+    "nicknamePlaceholder": "Մականուն",
     "photo": "Լուսանկար",
     "photoPreview": "Նախադիտում",
-    "gender": "Սեռ",
+    "gender": "Սեռ *",
     "selectGender": "Ընտրել սեռը",
     "male": "Արական",
     "female": "Իգական",
-    "nodeColor": "Հանգույցի գույնը",
+    "nodeColor": "Գույնը",
     "birthDate": "Ծննդյան ամսաթիվ",
     "deathDate": "Մահվան ամսաթիվ",
     "birthPlace": "Ծննդավայր",
     "birthPlacePlaceholder": "Քաղաք, նահանգ, երկիր",
     "livingPlace": "Բնակության վայրը",
     "occupation": "Մասնագիտություն",
-    "occupationPlaceholder": "Աշխատանքի անվանումը կամ մասնագիտությունը",
-    "facebookUrl": "Facebook պրոֆիլի URL",
+    "occupationPlaceholder": "Մասնագիտություն",
+    "facebookUrl": "Facebook",
     "facebookUrlPlaceholder": "https://facebook.com/...",
-    "instagramUrl": "Instagram պրոֆիլի URL",
+    "instagramUrl": "Instagram",
     "instagramUrlPlaceholder": "https://instagram.com/...",
     "notes": "Նշումներ",
     "notesPlaceholder": "Լրացուցիչ տեղեկություններ...",
@@ -106,32 +106,32 @@
     "save": "Պահպանել հարաբերությունը"
   },
   "tree": {
-    "title": "Ընտանեկան ծառ",
+    "title": "Տոհմածառ",
     "settings": "Ծառի կարգավորումներ",
     "empty": "Դեռ անձինք չկան։ Ավելացրեք առաջինին։",
     "lastUpdated": "Վերջին թարմացում՝ {date}",
     "createNew": "Ստեղծել նոր ծառ",
-    "createNewTitle": "Ստեղծել նոր ընտանեկան ծառ",
-    "createNewDescription": "Սկսեք ձեր ընտանեկան տոհմածառի կառուցումը՝ ստեղծելով նոր ծառ։",
+    "createNewTitle": "Ստեղծել նոր ծառ",
+    "createNewDescription": "Սկսեք ձեր տոհմածառի կառուցումը։",
     "name": "Ծառի անվանումը",
-    "namePlaceholder": "օրինակ՝ Սմիթների ընտանեկան ծառը",
+    "namePlaceholder": "օրինակ՝ Սմիթների տոհմածառը",
     "description": "Նկարագրություն (ըստ ցանկության)",
-    "descriptionPlaceholder": "Այս ընտանեկան ծառի համառոտ նկարագրությունը...",
-    "create": "Ստեղծել ծառ",
-    "emptyTitle": "Ընտանեկան ծառեր դեռ չկան",
-    "emptyDescription": "Ստեղծեք ձեր առաջին ընտանեկան ծառը՝ սկսելու համար",
-    "createFirst": "Ստեղծել ձեր առաջին ծառը",
+    "descriptionPlaceholder": "Այս տոհմածառի համառոտ նկարագրությունը...",
+    "create": "Ստեղծել տոհմածառ",
+    "emptyTitle": "Տոհմածառեր դեռ չկան",
+    "emptyDescription": "Ստեղծեք ձեր առաջին տոհմածառը՝ սկսելու համար",
+    "createFirst": "Ստեղծել ձեր առաջին տոհմածառը",
     "peopleCount": "{count, plural, =0 {0 մարդ} one {1 մարդ} other {# մարդ}}",
-    "viewAndEdit": "Դիտել և խմբագրել ծառը",
-    "loadingDescription": "Խնդրում ենք սպասել, մինչ մենք բեռնում ենք ձեր ընտանեկան ծառը։",
+    "viewAndEdit": "Դիտել և խմբագրել տոհմածառը",
+    "loadingDescription": "Խնդրում ենք սպասել, մինչ մենք բեռնում ենք ձեր տոհմածառը",
     "backToDashboard": "Վերադառնալ գլխավոր էջ",
     "noPeople": "Դեռ մարդիկ չեն ավելացվել",
-    "noPeopleDescription": "Սկսեք ձեր ընտանեկան ծառի կառուցումը՝ ավելացնելով առաջին մարդուն"
+    "noPeopleDescription": "Սկսեք ձեր տոհմածառի կառուցումը՝ ավելացնելով առաջին մարդուն"
   },
   "dialogs": {
     "confirmDeleteTitle": "Համոզված ե՞ք։",
     "confirmDeleteDesc": "Այս գործողությունը չի կարող չեղարկվել։",
-    "confirmDeleteDescription": "Այս գործողությունը չի կարող չեղարկվել։ Սա ընդմիշտ կջնջի **{treeName}** ծառը և դրա բոլոր տվյալները։",
+    "confirmDeleteDescription": "Այս գործողությունը չի կարող չեղարկվել։ Սա ընդմիշտ կջնջի **{treeName}** տոհմածառը և դրա բոլոր տվյալները։",
     "deletePersonTitle": "Ջնջե՞լ {name}-ին։",
     "deletePersonDescription": "Համոզված ե՞ք, որ ցանկանում եք ջնջել այս անձին։ Սա նաև կջնջի նրա բոլոր հարաբերությունները։ Այս գործողությունը չի կարող չեղարկվել։"
   },
@@ -157,7 +157,7 @@
     "photoAlt": "{name}-ի լուսանկարը"
   },
   "a11y": {
-    "dragNode": "Քաշել անձի հանգույցը",
+    "dragNode": "Քաշել անձին",
     "dropHere": "Թողնել այստեղ",
     "openDetails": "Բացել մանրամասները"
   },
@@ -176,7 +176,7 @@
     "status": "Կարգավիճակ",
     "actions": "Գործողություններ",
     "openMenu": "Բացել մենյուն",
-    "trees": "Ծառեր",
+    "trees": "Տոհմածառեր",
     "name": "Անուն",
     "owner": "Սեփականատեր"
   },
@@ -189,7 +189,7 @@
     "birthPlaces": "Ծննդավայրեր",
     "occupations": "Մասնագիտություններ",
     "photos": "Լուսանկարներ",
-    "currentPlaces": "Ընթացիկ վայրեր",
+    "currentPlaces": "Հիմնական ապրելու վայրեր",
     "fatherNames": "Հայրանուններ"
   }
 }
