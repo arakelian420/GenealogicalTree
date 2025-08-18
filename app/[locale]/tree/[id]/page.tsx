@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ReactFlowProvider,
   useNodesState,
@@ -33,6 +34,7 @@ type Person = PrismaPerson & {
 };
 
 export default function TreePage() {
+  const t = useTranslations();
   const params = useParams();
   const router = useRouter();
   const treeId = params.id as string;
@@ -86,7 +88,7 @@ export default function TreePage() {
         };
       });
     } else {
-      console.error("Failed to delete person");
+      console.error(t("errors.failedToDeletePerson"));
     }
 
     setDeletingPerson(null);
@@ -351,10 +353,8 @@ export default function TreePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Loading...</h2>
-          <p className="text-gray-600">
-            Please wait while we load your family tree.
-          </p>
+          <h2 className="text-2xl font-semibold mb-2">{t("common.loading")}</h2>
+          <p className="text-gray-600">{t("tree.loadingDescription")}</p>
         </div>
       </div>
     );
@@ -369,7 +369,7 @@ export default function TreePage() {
               <Link href="/">
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                  {t("tree.backToDashboard")}
                 </Button>
               </Link>
               <div>
@@ -384,7 +384,9 @@ export default function TreePage() {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 text-sm text-gray-600 mr-4">
                 <Users className="h-4 w-4" />
-                <span>{tree.people.length} people</span>
+                <span>
+                  {t("tree.peopleCount", { count: tree.people.length })}
+                </span>
               </div>
               <Button
                 variant="outline"
@@ -392,7 +394,7 @@ export default function TreePage() {
                 onClick={() => setShowPersonForm(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Person
+                {t("person.add")}
               </Button>
               <Button
                 variant="outline"
@@ -400,7 +402,7 @@ export default function TreePage() {
                 onClick={() => setShowSettings(true)}
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                {t("tree.settings")}
               </Button>
               <Button
                 variant="outline"
@@ -409,7 +411,7 @@ export default function TreePage() {
                 disabled={!tree}
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save
+                {t("common.save")}
               </Button>
             </div>
           </div>
@@ -422,14 +424,14 @@ export default function TreePage() {
             <CardContent>
               <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                No People Added Yet
+                {t("tree.noPeople")}
               </h3>
               <p className="text-gray-500 mb-4">
-                Start building your family tree by adding the first person
+                {t("tree.noPeopleDescription")}
               </p>
               <Button onClick={() => setShowPersonForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add First Person
+                {t("person.addFirst")}
               </Button>
             </CardContent>
           </Card>
@@ -488,8 +490,10 @@ export default function TreePage() {
         isOpen={isConfirmDeleteDialogOpen}
         onClose={() => setIsConfirmDeleteDialogOpen(false)}
         onConfirm={confirmDeletePerson}
-        title={`Delete ${deletingPerson?.firstName} ${deletingPerson?.lastName}?`}
-        description="Are you sure you want to delete this person? This will also remove all their relationships. This action cannot be undone."
+        title={t("dialogs.deletePersonTitle", {
+          name: `${deletingPerson?.firstName} ${deletingPerson?.lastName}`,
+        })}
+        description={t("dialogs.deletePersonDescription")}
       />
     </div>
   );

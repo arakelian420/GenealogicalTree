@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { Person } from "@prisma/client";
+import { useTranslations } from "next-intl";
 import type { DisplaySettings } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export default function PersonCard({
   onDelete,
   isLocked = false,
 }: PersonCardProps) {
+  const t = useTranslations("person");
   const [siblings, setSiblings] = useState<Person[]>([]);
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -129,7 +131,9 @@ export default function PersonCard({
           {displaySettings.showPhotos && person.photo ? (
             <Image
               src={person.photo}
-              alt={`${person.firstName} ${person.lastName}`}
+              alt={t("photoAlt", {
+                name: `${person.firstName} ${person.lastName}`,
+              })}
               width={200}
               height={128}
               className="w-full h-32 object-cover rounded-t-md"
@@ -198,13 +202,19 @@ export default function PersonCard({
 
           <div className={`text-xs mt-1 space-y-0.5 text-gray-600`}>
             {displaySettings.showBirthDate && person.birthDate && (
-              <div>Born: {person.birthDate}</div>
+              <div>
+                {t("born")}: {person.birthDate}
+              </div>
             )}
             {displaySettings.showDeathDate && person.deathDate && (
-              <div>Died: {person.deathDate}</div>
+              <div>
+                {t("died")}: {person.deathDate}
+              </div>
             )}
             {displaySettings.showCurrentPlace && person.currentPlace && (
-              <div>Living: {person.currentPlace}</div>
+              <div>
+                {t("living")}: {person.currentPlace}
+              </div>
             )}
             {displaySettings.showBirthPlace && person.birthPlace && (
               <div>{person.birthPlace}</div>
@@ -213,11 +223,13 @@ export default function PersonCard({
               <div>{person.occupation}</div>
             )}
             {displaySettings.showFatherName && person.fatherName && (
-              <div>Father: {person.fatherName}</div>
+              <div>
+                {t("father")}: {person.fatherName}
+              </div>
             )}
             {siblings.length > 0 && (
               <div className="pt-2">
-                <h5 className="font-semibold text-xs">Siblings:</h5>
+                <h5 className="font-semibold text-xs">{t("siblings")}:</h5>
                 <ul className="text-left">
                   {siblings.map((sibling) => (
                     <li

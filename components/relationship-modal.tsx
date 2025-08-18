@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ export default function RelationshipModal({
   onClose,
   onSave,
 }: RelationshipModalProps) {
+  const t = useTranslations("relationship");
   const [newRelationType, setNewRelationType] =
     useState<RelationshipType>("parent_child");
 
@@ -36,11 +38,11 @@ export default function RelationshipModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Relationship</DialogTitle>
+          <DialogTitle>{t("create")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>Relationship Type</Label>
+            <Label>{t("type")}</Label>
             <Select
               value={newRelationType}
               onValueChange={(value) =>
@@ -51,13 +53,13 @@ export default function RelationshipModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="parent_child">Parent/Child</SelectItem>
-                <SelectItem value="spouse">Spouse</SelectItem>
+                <SelectItem value="parent_child">{t("parentChild")}</SelectItem>
+                <SelectItem value="spouse">{t("spouse")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Button onClick={() => onSave(newRelationType)} className="w-full">
-            Save Relationship
+            {t("save")}
           </Button>
         </div>
       </DialogContent>

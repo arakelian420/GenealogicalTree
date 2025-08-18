@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 
 export default function AdminPage() {
+  const t = useTranslations("admin");
   const { data: session, status } = useSession();
   const router = useRouter();
   const [users, setUsers] = useState([]);
@@ -81,7 +83,7 @@ export default function AdminPage() {
   if (status === "loading" || session?.user?.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("common.loading")}</p>
       </div>
     );
   }
@@ -89,21 +91,21 @@ export default function AdminPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
         <Link href="/">
-          <Button variant="outline">Return to Dashboard</Button>
+          <Button variant="outline">{t("returnToDashboard")}</Button>
         </Link>
       </div>
 
       <div className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">Users</h2>
+        <h2 className="text-2xl font-semibold mb-4">{t("users")}</h2>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t("email")}</TableHead>
+              <TableHead>{t("role")}</TableHead>
+              <TableHead>{t("status")}</TableHead>
+              <TableHead>{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,13 +130,13 @@ export default function AdminPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">{t("openMenu")}</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => deleteUser(user.id)}>
-                        Delete
+                        {t("common.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -146,13 +148,13 @@ export default function AdminPage() {
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Trees</h2>
+        <h2 className="text-2xl font-semibold mb-4">{t("trees")}</h2>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("owner")}</TableHead>
+              <TableHead>{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -166,7 +168,7 @@ export default function AdminPage() {
                     size="sm"
                     onClick={() => deleteTree(tree.id)}
                   >
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </TableCell>
               </TableRow>

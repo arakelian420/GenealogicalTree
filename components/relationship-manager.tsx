@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export default function RelationshipManager({
   onUpdateTree,
   isLocked,
 }: RelationshipManagerProps) {
+  const t = useTranslations("relationship");
   const [newRelationType, setNewRelationType] =
     useState<RelationshipType>("parent_child");
   const [newRelatedPersonId, setNewRelatedPersonId] = useState("");
@@ -89,7 +91,9 @@ export default function RelationshipManager({
 
   const getPersonName = (personId: string) => {
     const person = tree.people.find((p) => p.id === personId);
-    return person ? `${person.firstName} ${person.lastName}` : "Unknown";
+    return person
+      ? `${person.firstName} ${person.lastName}`
+      : t("common.unknown");
   };
 
   const getRelationshipDisplay = (relationship: Relationship) => {
@@ -99,16 +103,17 @@ export default function RelationshipManager({
         : relationship.fromPersonId
     );
 
-    let relationshipText = "";
-    if (relationship.type === "parent_child") {
-      if (relationship.fromPersonId === selectedPerson.id) {
-        relationshipText = `${selectedPerson.firstName}'s child`;
-      } else {
-        relationshipText = `${selectedPerson.firstName}'s parent`;
-      }
-    } else {
-      relationshipText = `${selectedPerson.firstName}'s spouse`;
-    }
+    const relKey = {
+      parent_child:
+        relationship.fromPersonId === selectedPerson.id
+          ? "isChildOf"
+          : "isParentOf",
+      spouse: "isSpouseOf",
+    };
+
+    const relationshipText = t(relKey[relationship.type], {
+      name: selectedPerson.firstName,
+    });
 
     return `${relatedPersonName} (${relationshipText})`;
   };
@@ -117,19 +122,20 @@ export default function RelationshipManager({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Manage Relationships</DialogTitle>
+          <DialogTitle>{t("manage")}</DialogTitle>
           <DialogDescription>
-            Manage family relationships for {selectedPerson.firstName}{" "}
-            {selectedPerson.lastName}
+            {t("manageDescription", {
+              name: `${selectedPerson.firstName} ${selectedPerson.lastName}`,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div>
-            <h4 className="font-medium mb-3">Add New Relationship</h4>
+            <h4 className="font-medium mb-3">{t("addNew")}</h4>
             <div className="space-y-3">
               <div>
-                <Label>Relationship Type</Label>
+                <Label>{t("type")}</Label>
                 <Select
                   value={newRelationType}
                   onValueChange={(value) =>
@@ -140,19 +146,21 @@ export default function RelationshipManager({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="parent_child">Parent/Child</SelectItem>
-                    <SelectItem value="spouse">Spouse</SelectItem>
+                    <SelectItem value="parent_child">
+                      {t("parentChild")}
+                    </SelectItem>
+                    <SelectItem value="spouse">{t("spouse")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Person</Label>
+                <Label>{t("person")}</Label>
                 <Select
                   value={newRelatedPersonId}
                   onValueChange={setNewRelatedPersonId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a person" />
+                    <SelectValue placeholder={t("selectPerson")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availablePeople.map((person) => (
@@ -168,17 +176,15 @@ export default function RelationshipManager({
                 disabled={!newRelatedPersonId || isLocked}
                 className="w-full"
               >
-                Add Relationship
+                {t("add")}
               </Button>
             </div>
           </div>
 
           <div>
-            <h4 className="font-medium mb-3">Current Relationships</h4>
+            <h4 className="font-medium mb-3">{t("current")}</h4>
             {currentRelationships.length === 0 ? (
-              <p className="text-gray-500 text-sm">
-                No relationships defined yet.
-              </p>
+              <p className="text-gray-500 text-sm">{t("noneDefined")}</p>
             ) : (
               <div className="space-y-2">
                 {currentRelationships.map((relationship) => (

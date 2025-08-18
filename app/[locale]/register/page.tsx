@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,39 +12,30 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function SignIn() {
+export default function Register() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const urlMessage = searchParams.get("message");
-    if (urlMessage === "wait-for-approval") {
-      setMessage("Registration successful. Please wait for admin approval.");
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setMessage("");
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (res?.ok) {
-      router.push("/");
+    if (response.ok) {
+      router.push("/signin?message=wait-for-approval");
     } else {
-      setError("Sign in failed. Check the details you provided are correct.");
+      const data = await response.json();
+      setError(data.error || t("errors.somethingWentWrong"));
     }
   };
 
@@ -52,14 +43,13 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Sign In</CardTitle>
-          <CardDescription>Access your family trees</CardDescription>
+          <CardTitle>{t("registerTitle")}</CardTitle>
+          <CardDescription>{t("createAccount")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {message && <p className="text-green-500 text-sm mb-4">{message}</p>}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -69,7 +59,7 @@ export default function SignIn() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -80,15 +70,9 @@ export default function SignIn() {
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full">
-              Sign In
+              {t("register")}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Link href="/register" className="underline">
-              Register
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

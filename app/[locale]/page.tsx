@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { useTranslations, useFormatter } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,6 +37,8 @@ import Link from "next/link";
 import type { Tree, Person, Relationship } from "@/lib/types";
 
 export default function Dashboard() {
+  const t = useTranslations();
+  const format = useFormatter();
   const { data: session, status } = useSession();
   const [trees, setTrees] = useState<
     (Tree & { people: Person[]; relationships: Relationship[] })[]
@@ -94,7 +97,7 @@ export default function Dashboard() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("common.loading")}</p>
       </div>
     );
   }
@@ -106,23 +109,21 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <TreePine className="h-12 w-12 text-green-600" />
             <h1 className="text-5xl font-bold text-gray-900">
-              Family Tree Manager
+              {t("home.title")}
             </h1>
           </div>
-          <p className="text-xl text-gray-600">
-            Please sign in to manage your family trees.
-          </p>
+          <p className="text-xl text-gray-600">{t("home.signInPrompt")}</p>
         </div>
         <div className="flex gap-4">
           <Link href="/signin">
             <Button size="lg">
               <LogIn className="mr-2 h-5 w-5" />
-              Sign In
+              {t("common.signIn")}
             </Button>
           </Link>
           <Link href="/register">
             <Button variant="outline" size="lg">
-              Register
+              {t("common.register")}
             </Button>
           </Link>
         </div>
@@ -138,34 +139,32 @@ export default function Dashboard() {
             <div className="flex items-center justify-center gap-3 mb-4">
               <TreePine className="h-8 w-8 text-green-600" />
               <h1 className="text-4xl font-bold text-gray-900">
-                Family Tree Manager
+                {t("home.title")}
               </h1>
             </div>
-            <p className="text-lg text-gray-600">
-              Create and manage your family genealogy
-            </p>
+            <p className="text-lg text-gray-600">{t("home.subtitle")}</p>
           </div>
           <div className="flex items-center gap-4">
             <p className="text-sm text-gray-700">
-              Signed in as <strong>{session?.user?.email}</strong>
+              {t("home.signedInAs")} <strong>{session?.user?.email}</strong>
             </p>
             {session?.user?.role === "admin" && (
               <Link href="/admin">
                 <Button variant="outline" size="sm">
-                  Admin Panel
+                  {t("common.adminPanel")}
                 </Button>
               </Link>
             )}
             <Button onClick={() => signOut()} variant="outline" size="sm">
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              {t("common.signOut")}
             </Button>
           </div>
         </header>
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
-            Your Family Trees
+            {t("home.yourTrees")}
           </h2>
           <Dialog
             open={isCreateDialogOpen}
@@ -174,35 +173,35 @@ export default function Dashboard() {
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Create New Tree
+                {t("tree.createNew")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Family Tree</DialogTitle>
+                <DialogTitle>{t("tree.createNewTitle")}</DialogTitle>
                 <DialogDescription>
-                  Start building your family genealogy by creating a new tree.
+                  {t("tree.createNewDescription")}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="tree-name">Tree Name</Label>
+                  <Label htmlFor="tree-name">{t("tree.name")}</Label>
                   <Input
                     id="tree-name"
                     value={newTreeName}
                     onChange={(e) => setNewTreeName(e.target.value)}
-                    placeholder="e.g., Smith Family Tree"
+                    placeholder={t("tree.namePlaceholder")}
                   />
                 </div>
                 <div>
                   <Label htmlFor="tree-description">
-                    Description (Optional)
+                    {t("tree.description")}
                   </Label>
                   <Textarea
                     id="tree-description"
                     value={newTreeDescription}
                     onChange={(e) => setNewTreeDescription(e.target.value)}
-                    placeholder="Brief description of this family tree..."
+                    placeholder={t("tree.descriptionPlaceholder")}
                   />
                 </div>
               </div>
@@ -211,9 +210,9 @@ export default function Dashboard() {
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
-                <Button onClick={createTree}>Create Tree</Button>
+                <Button onClick={createTree}>{t("tree.create")}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -224,14 +223,12 @@ export default function Dashboard() {
             <CardContent>
               <TreePine className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                No Family Trees Yet
+                {t("tree.emptyTitle")}
               </h3>
-              <p className="text-gray-500 mb-4">
-                Create your first family tree to get started
-              </p>
+              <p className="text-gray-500 mb-4">{t("tree.emptyDescription")}</p>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Your First Tree
+                {t("tree.createFirst")}
               </Button>
             </CardContent>
           </Card>
@@ -269,12 +266,12 @@ export default function Dashboard() {
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2">
                             <AlertTriangle className="text-red-500" />
-                            Are you sure?
+                            {t("dialogs.confirmDeleteTitle")}
                           </DialogTitle>
                           <DialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the <strong>{tree.name}</strong> tree and all
-                            of its data.
+                            {t("dialogs.confirmDeleteDescription", {
+                              treeName: tree.name,
+                            })}
                           </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
@@ -282,7 +279,7 @@ export default function Dashboard() {
                             variant="outline"
                             onClick={() => setShowDeleteConfirm(null)}
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </Button>
                           <Button
                             variant="destructive"
@@ -291,7 +288,7 @@ export default function Dashboard() {
                               setShowDeleteConfirm(null);
                             }}
                           >
-                            Delete
+                            {t("common.delete")}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -302,17 +299,25 @@ export default function Dashboard() {
                   <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{tree.people?.length || 0} people</span>
+                      <span>
+                        {t("tree.peopleCount", {
+                          count: tree.people?.length || 0,
+                        })}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       <span>
-                        {new Date(tree.createdAt).toLocaleDateString()}
+                        {format.dateTime(new Date(tree.createdAt), {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </span>
                     </div>
                   </div>
                   <Link href={`/tree/${tree.id}`}>
-                    <Button className="w-full">View & Edit Tree</Button>
+                    <Button className="w-full">{t("tree.viewAndEdit")}</Button>
                   </Link>
                 </CardContent>
               </Card>

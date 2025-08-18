@@ -26,7 +26,7 @@ export interface Person {
   birthPlace: string | null;
   occupation: string | null;
   notes: string | null;
-  gender: "male" | "female" | "other" | null;
+  gender: "male" | "female" | null;
   photo: string | null;
   nickname: string | null;
   currentPlace: string | null;
@@ -38,6 +38,7 @@ export interface Person {
   width: number | null;
   height: number | null;
   documents?: Document[];
+  instagramUrl: string | null;
 }
 
 export interface Relationship {

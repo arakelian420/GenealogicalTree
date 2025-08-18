@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export default function TreeSettings({
   tree,
   onUpdateTree,
 }: TreeSettingsProps) {
+  const t = useTranslations("treeSettings");
   const updateSetting = (key: keyof DisplaySettings, value: boolean) => {
     onUpdateSettings({
       ...settings,
@@ -48,18 +50,16 @@ export default function TreeSettings({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Tree Display Settings</DialogTitle>
-          <DialogDescription>
-            Customize how your family tree is displayed
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <div>
-            <h4 className="font-medium mb-4">Information to Display</h4>
+            <h4 className="font-medium mb-4">{t("information")}</h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-birth-date">Birth Dates</Label>
+                <Label htmlFor="show-birth-date">{t("birthDates")}</Label>
                 <Switch
                   id="show-birth-date"
                   checked={settings.showBirthDate}
@@ -69,7 +69,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-death-date">Death Dates</Label>
+                <Label htmlFor="show-death-date">{t("deathDates")}</Label>
                 <Switch
                   id="show-death-date"
                   checked={settings.showDeathDate}
@@ -79,7 +79,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-birth-place">Birth Places</Label>
+                <Label htmlFor="show-birth-place">{t("birthPlaces")}</Label>
                 <Switch
                   id="show-birth-place"
                   checked={settings.showBirthPlace}
@@ -89,7 +89,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-occupation">Occupations</Label>
+                <Label htmlFor="show-occupation">{t("occupations")}</Label>
                 <Switch
                   id="show-occupation"
                   checked={settings.showOccupation}
@@ -99,7 +99,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-photos">Photos</Label>
+                <Label htmlFor="show-photos">{t("photos")}</Label>
                 <Switch
                   id="show-photos"
                   checked={settings.showPhotos}
@@ -109,7 +109,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-current-place">Current Places</Label>
+                <Label htmlFor="show-current-place">{t("currentPlaces")}</Label>
                 <Switch
                   id="show-current-place"
                   checked={settings.showCurrentPlace}
@@ -119,7 +119,7 @@ export default function TreeSettings({
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="show-father-name">Father's Names</Label>
+                <Label htmlFor="show-father-name">{t("fatherNames")}</Label>
                 <Switch
                   id="show-father-name"
                   checked={settings.showFatherName}

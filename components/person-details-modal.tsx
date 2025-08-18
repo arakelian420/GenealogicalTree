@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export default function PersonDetailsModal({
   isOpen,
   onClose,
 }: PersonDetailsModalProps) {
+  const t = useTranslations("person");
   const [documents, setDocuments] = useState<Document[]>([]);
 
   useEffect(() => {
@@ -97,47 +99,47 @@ export default function PersonDetailsModal({
           <div className="space-y-2 text-sm">
             {person.gender && (
               <div>
-                <strong>Gender:</strong> {person.gender}
+                <strong>{t("gender")}:</strong> {person.gender}
               </div>
             )}
             {person.fatherName && (
               <div>
-                <strong>Father's Name:</strong> {person.fatherName}
+                <strong>{t("fatherName")}:</strong> {person.fatherName}
               </div>
             )}
             {person.birthDate && (
               <div>
-                <strong>Born:</strong> {person.birthDate}
+                <strong>{t("born")}:</strong> {person.birthDate}
               </div>
             )}
             {person.deathDate && (
               <div>
-                <strong>Died:</strong> {person.deathDate}
+                <strong>{t("died")}:</strong> {person.deathDate}
               </div>
             )}
             {person.birthPlace && (
               <div>
-                <strong>Birth Place:</strong> {person.birthPlace}
+                <strong>{t("birthPlace")}:</strong> {person.birthPlace}
               </div>
             )}
             {person.currentPlace && (
               <div>
-                <strong>Place of Living:</strong> {person.currentPlace}
+                <strong>{t("livingPlace")}:</strong> {person.currentPlace}
               </div>
             )}
             {person.occupation && (
               <div>
-                <strong>Occupation:</strong> {person.occupation}
+                <strong>{t("occupation")}:</strong> {person.occupation}
               </div>
             )}
             {person.notes && (
               <div>
-                <strong>Notes:</strong> {person.notes}
+                <strong>{t("notes")}:</strong> {person.notes}
               </div>
             )}
             {person.facebookUrl && (
               <div className="flex items-center gap-2">
-                <strong>Facebook:</strong>
+                <strong>{t("facebook")}:</strong>
                 <a
                   href={person.facebookUrl}
                   target="_blank"
@@ -150,7 +152,7 @@ export default function PersonDetailsModal({
             )}
             {documents.length > 0 && (
               <div>
-                <strong>Documents:</strong>
+                <strong>{t("documents")}:</strong>
                 <ul className="list-disc list-inside">
                   {documents.map((doc) => (
                     <li key={doc.id}>
