@@ -128,7 +128,6 @@ export default function TreePage() {
       (p: Person) => !connectedIds.has(p.id)
     );
     const reactFlowNodes: Node[] = [];
-    const reactFlowEdges: Edge[] = [];
     let x = 0;
     let y = 0;
     for (const person of unconnectedPeople) {
@@ -196,7 +195,7 @@ export default function TreePage() {
         if (familySubTree) {
           layoutTree(familySubTree, 0, yOffset);
           yOffset += V_SPACING;
-          const { nodes: newNodes, edges: newEdges } = convertToReactFlow(
+          const { nodes: newNodes } = convertToReactFlow(
             familySubTree,
             displaySettings,
             (p: Person) => {
@@ -443,7 +442,6 @@ export default function TreePage() {
             <ReactFlowProvider>
               <TreeView
                 tree={tree}
-                displaySettings={displaySettings}
                 onUpdateTree={fetchTree}
                 onEditPerson={(person) => {
                   setEditingPerson(person);
@@ -455,8 +453,6 @@ export default function TreePage() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 setNodes={setNodes}
-                setEdges={setEdges}
-                onNodePositionChange={handleNodePositionChange}
                 onNodeDragStop={handleNodeDragStop}
               />
             </ReactFlowProvider>

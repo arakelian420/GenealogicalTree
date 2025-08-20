@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params;
+  const { id } = await params;
   const body = await request.json();
   const { documents, ...personUpdateData } = body;
 
@@ -35,31 +35,29 @@ export async function PUT(
       return new NextResponse("Tree is locked", { status: 403 });
     }
 
-    const updatedPerson = await prisma.$transaction(
-      async (tx: Prisma.TransactionClient) => {
-        const updatedPersonData = await tx.person.update({
-          where: { id },
-          data: personUpdateData,
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const updatedPersonData = await tx.person.update({
+        where: { id },
+        data: personUpdateData,
+      });
+
+      if (documents) {
+        await tx.document.deleteMany({
+          where: { personId: id },
         });
-
-        if (documents) {
-          await tx.document.deleteMany({
-            where: { personId: id },
+        if (documents.length > 0) {
+          await tx.document.createMany({
+            data: documents.map((doc: { name: string; url: string }) => ({
+              name: doc.name,
+              url: doc.url,
+              personId: id,
+            })),
           });
-          if (documents.length > 0) {
-            await tx.document.createMany({
-              data: documents.map((doc: { name: string; url: string }) => ({
-                name: doc.name,
-                url: doc.url,
-                personId: id,
-              })),
-            });
-          }
         }
-
-        return updatedPersonData;
       }
-    );
+
+      return updatedPersonData;
+    });
 
     const personWithDocuments = await prisma.person.findUnique({
       where: { id },
@@ -80,14 +78,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await context.params;
+  const { id } = await params;
   const person = await prisma.person.findUnique({
     where: { id },
     include: { tree: true },

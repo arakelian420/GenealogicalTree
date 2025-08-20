@@ -3,9 +3,9 @@ import { getSiblings } from "@/lib/tree-utils";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
   const siblings = await getSiblings(id);
   return NextResponse.json(siblings);
 }

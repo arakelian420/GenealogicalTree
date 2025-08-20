@@ -189,6 +189,9 @@
     "openMenu": "Open menu",
     "trees": "Trees",
     "name": "Name",
-    "owner": "Owner"
+    "owner": "Owner",
+    "common": {
+      "loading": "Loading..."
+    }
   }
 }

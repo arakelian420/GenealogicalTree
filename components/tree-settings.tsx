@@ -10,13 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { DisplaySettings } from "@/lib/types";
 
 import type { Tree } from "@prisma/client";
@@ -35,8 +28,6 @@ export default function TreeSettings({
   onClose,
   settings,
   onUpdateSettings,
-  tree,
-  onUpdateTree,
 }: TreeSettingsProps) {
   const t = useTranslations("treeSettings");
   const updateSetting = (key: keyof DisplaySettings, value: boolean) => {

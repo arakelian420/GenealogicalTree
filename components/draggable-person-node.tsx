@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useTranslations } from "next-intl";
 import type { Person } from "@/lib/types";
 import PersonCard from "./person-card";
 import { Handle, Position, NodeResizer } from "reactflow";
@@ -28,7 +27,6 @@ export default function DraggablePersonNode({
   data,
   selected = false,
 }: DraggablePersonNodeProps) {
-  const t = useTranslations("a11y");
   const {
     person,
     persons,

@@ -28,8 +28,23 @@ export default function AdminPage() {
   const t = useTranslations("admin");
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
-  const [trees, setTrees] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [trees, setTrees] = useState<TreeWithUser[]>([]);
+
+  interface User {
+    id: string;
+    email: string;
+    role: string;
+    status: string;
+  }
+
+  interface TreeWithUser {
+    id: string;
+    name: string;
+    user: {
+      email: string;
+    };
+  }
 
   useEffect(() => {
     if (status === "loading") return;
@@ -109,7 +124,7 @@ export default function AdminPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user: any) => (
+            {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
@@ -158,7 +173,7 @@ export default function AdminPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {trees.map((tree: any) => (
+            {trees.map((tree) => (
               <TableRow key={tree.id}>
                 <TableCell>{tree.name}</TableCell>
                 <TableCell>{tree.user.email}</TableCell>

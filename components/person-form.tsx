@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import type {
   Tree,
   Person as PrismaPerson,
@@ -105,7 +104,7 @@ export default function PersonForm({
         nickname: editingPerson.nickname || "",
         currentPlace: editingPerson.currentPlace || "",
         facebookUrl: editingPerson.facebookUrl || "",
-        instagramUrl: (editingPerson as any).instagramUrl || "",
+        instagramUrl: editingPerson.instagramUrl || "",
         fatherName: editingPerson.fatherName || "",
         color: editingPerson.color || "",
       });
@@ -441,7 +440,7 @@ export default function PersonForm({
               <Label htmlFor="instagramUrl">{t("instagramUrl")}</Label>
               <Input
                 id="instagramUrl"
-                value={(formData as any).instagramUrl}
+                value={formData.instagramUrl}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,

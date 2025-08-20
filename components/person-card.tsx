@@ -206,9 +206,9 @@ export default function PersonCard({
                 <Facebook className="h-4 w-4 text-blue-600 hover:text-blue-800" />
               </a>
             )}
-            {(person as any).instagramUrl && (
+            {person.instagramUrl && (
               <a
-                href={(person as any).instagramUrl}
+                href={person.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

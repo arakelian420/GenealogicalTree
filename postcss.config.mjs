@@ -5,7 +5,7 @@ const config = {
       "postcss-preset-env",
       {
         features: {
-          "oklab-color-function": {
+          "oklab-function": {
             preserve: true,
           },
         },

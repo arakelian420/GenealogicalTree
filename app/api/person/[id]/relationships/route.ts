@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: personId } = await context.params;
+  const { id: personId } = await params;
   const {} = await request.json();
 
   if (!personId) {
@@ -24,8 +24,6 @@ export async function PUT(
     if (!person) {
       return NextResponse.json({ error: "Person not found" }, { status: 404 });
     }
-    const { treeId } = person;
-
     await prisma.$transaction(async (tx) => {
       // 1. Delete existing parent and spouse relationships for this person
       await tx.relationship.deleteMany({

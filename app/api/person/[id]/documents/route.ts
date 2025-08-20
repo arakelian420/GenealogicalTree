@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
   const documents = await prisma.document.findMany({
     where: { personId: id },
   });

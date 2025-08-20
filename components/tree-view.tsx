@@ -18,7 +18,6 @@ import ReactFlow, {
   type Connection,
   useReactFlow,
   ControlButton,
-  useOnSelectionChange,
 } from "reactflow";
 import {
   AlertTriangle,
@@ -38,10 +37,8 @@ import type {
   RelationshipType,
 } from "@prisma/client";
 
-import type { DisplaySettings, Person } from "@/lib/types";
-import { buildTree, HierarchyNode } from "@/lib/tree-builder";
+import type { Person } from "@/lib/types";
 import DraggablePersonNode from "./draggable-person-node";
-import PersonForm from "./person-form";
 import RelationshipManager from "./relationship-manager";
 import RelationshipModal from "./relationship-modal";
 import {
@@ -51,17 +48,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
 
 const NODE_WIDTH = 200;
 const H_SPACING = 50;
-const V_SPACING = 350;
 
 interface TreeViewProps {
   tree: Tree & { people: Person[]; relationships: Relationship[] };
-  displaySettings: DisplaySettings;
   onUpdateTree: () => void;
   onEditPerson: (person: Person) => void;
   isLocked: boolean;
@@ -70,17 +64,11 @@ interface TreeViewProps {
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
-  onNodePositionChange: (
-    personId: string,
-    position: { x: number; y: number }
-  ) => void;
   onNodeDragStop: (event: React.MouseEvent, node: Node) => void;
 }
 
 export default function TreeView({
   tree,
-  displaySettings,
   onUpdateTree,
   isLocked,
   onEditPerson,
@@ -89,12 +77,9 @@ export default function TreeView({
   onNodesChange,
   onEdgesChange,
   setNodes,
-  setEdges,
-  onNodePositionChange,
   onNodeDragStop,
 }: TreeViewProps) {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [showRelationshipManager, setShowRelationshipManager] = useState(false);
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
   const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
@@ -102,13 +87,6 @@ export default function TreeView({
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const [isDeleting, setIsDeleting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
-
-  useOnSelectionChange({
-    onChange: ({ nodes }) => {
-      setSelectedNodeIds(nodes.map((node) => node.id));
-    },
-  });
 
   const nodeTypes = useMemo(
     () => ({ draggablePerson: DraggablePersonNode }),
@@ -138,39 +116,6 @@ export default function TreeView({
     [onUpdateTree]
   );
 
-  const onNodeResizeEnd = async (
-    personId: string,
-    width: number,
-    height: number
-  ) => {
-    console.log("Resizing, selected nodes:", selectedNodeIds);
-    const nodeIdsToResize =
-      selectedNodeIds.length > 1 && selectedNodeIds.includes(personId)
-        ? selectedNodeIds
-        : [personId];
-
-    setNodes((nds) =>
-      nds.map((n) =>
-        nodeIdsToResize.includes(n.id)
-          ? { ...n, style: { ...n.style, width, height } }
-          : n
-      )
-    );
-
-    await fetch(`/api/person/position`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personIds: nodeIdsToResize,
-        width,
-        height,
-      }),
-    });
-  };
-
-  useEffect(() => {
-    console.log("Edges in TreeView:", edges);
-  }, [edges]);
   useEffect(() => {
     console.log("Edges in TreeView:", edges);
   }, [edges]);
@@ -183,14 +128,6 @@ export default function TreeView({
       }))
     );
   }, [selectedPerson, setNodes]);
-
-  const handleSelectPerson = (person: Person) => {
-    if (selectedPerson?.id === person.id) {
-      setSelectedPerson(null);
-    } else {
-      setSelectedPerson(person);
-    }
-  };
 
   const onConnect = (connection: Connection) => {
     setNewConnection(connection);
@@ -517,162 +454,4 @@ export default function TreeView({
       </Dialog>
     </div>
   );
-}
-
-function convertToReactFlow(
-  node: HierarchyNode,
-  displaySettings: DisplaySettings,
-  onSelectPerson: (person: Person) => void,
-  onEditPerson: (person: Person) => void,
-  onDeletePerson: (person: Person) => void,
-  persons: Person[],
-  relationships: Relationship[],
-  onResizeEnd: (personId: string, width: number, height: number) => void,
-  isLocked: boolean,
-  processedRelationships: Set<string>,
-  processedNodes: Set<string>
-): { nodes: Node[]; edges: Edge[] } {
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
-
-  if (!processedNodes.has(node.person.id)) {
-    nodes.push({
-      id: node.person.id,
-      type: "draggablePerson",
-      position: { x: node.x ?? 0, y: node.y ?? 0 },
-      style: {
-        width: (node.person as Person).width || "auto",
-        height: (node.person as Person).height || "auto",
-      },
-      data: {
-        person: node.person,
-        persons,
-        relationships,
-        displaySettings,
-        onSelectPerson,
-        onEditPerson,
-        onDeletePerson,
-        onResizeEnd,
-        isLocked,
-      },
-    });
-    processedNodes.add(node.person.id);
-  }
-
-  if (node.spouse) {
-    if (!processedNodes.has(node.spouse.person.id)) {
-      nodes.push({
-        id: node.spouse.person.id,
-        type: "draggablePerson",
-        position: { x: node.spouse.x ?? 0, y: node.spouse.y ?? 0 },
-        style: {
-          width: (node.spouse.person as Person).width || "auto",
-          height: (node.spouse.person as Person).height || "auto",
-        },
-        data: {
-          person: node.spouse.person,
-          persons,
-          relationships,
-          displaySettings,
-          onSelectPerson,
-          onEditPerson,
-          onDeletePerson,
-          onResizeEnd,
-          isLocked,
-        },
-      });
-      processedNodes.add(node.spouse.person.id);
-    }
-    const relationship = relationships.find(
-      (r) =>
-        r.type === "spouse" &&
-        ((r.fromPersonId === node.person.id &&
-          r.toPersonId === node.spouse!.person.id) ||
-          (r.fromPersonId === node.spouse!.person.id &&
-            r.toPersonId === node.person.id))
-    );
-    if (relationship && !processedRelationships.has(relationship.id)) {
-      const fromNode =
-        node.person.id === relationship.fromPersonId ? node : node.spouse;
-      const toNode =
-        node.person.id === relationship.toPersonId ? node : node.spouse;
-      const fromNodeIsLeft = (fromNode.x ?? 0) < (toNode.x ?? 0);
-      edges.push({
-        id: relationship.id,
-        source: relationship.fromPersonId,
-        target: relationship.toPersonId,
-        sourceHandle: fromNodeIsLeft ? "right" : "left",
-        targetHandle: fromNodeIsLeft ? "left" : "right",
-        type: "straight",
-        style: { strokeWidth: 2 },
-        zIndex: 1000,
-      });
-      processedRelationships.add(relationship.id);
-    }
-  }
-
-  for (const child of node.children) {
-    const { nodes: childNodes, edges: childEdges } = convertToReactFlow(
-      child,
-      displaySettings,
-      onSelectPerson,
-      onEditPerson,
-      onDeletePerson,
-      persons,
-      relationships,
-      onResizeEnd,
-      isLocked,
-      processedRelationships,
-      processedNodes
-    );
-    nodes.push(...childNodes);
-    edges.push(...childEdges);
-
-    const parentIds = [node.person.id];
-    if (node.spouse) {
-      parentIds.push(node.spouse.person.id);
-    }
-
-    const relationship = relationships.find(
-      (r) =>
-        r.type === "parent_child" &&
-        parentIds.includes(r.fromPersonId) &&
-        r.toPersonId === child.person.id
-    );
-
-    if (relationship && !processedRelationships.has(relationship.id)) {
-      edges.push({
-        id: relationship.id,
-        source: relationship.fromPersonId,
-        target: child.person.id,
-        sourceHandle: "bottom",
-        targetHandle: "top",
-        type: "step",
-      });
-      processedRelationships.add(relationship.id);
-    }
-  }
-
-  for (const parent of node.parents) {
-    const relationship = relationships.find(
-      (r) =>
-        r.type === "parent_child" &&
-        r.fromPersonId === parent.person.id &&
-        r.toPersonId === node.person.id
-    );
-
-    if (relationship && !processedRelationships.has(relationship.id)) {
-      edges.push({
-        id: relationship.id,
-        source: parent.person.id,
-        target: node.person.id,
-        sourceHandle: "bottom",
-        targetHandle: "top",
-        type: "step",
-      });
-      processedRelationships.add(relationship.id);
-    }
-  }
-
-  return { nodes, edges };
 }
