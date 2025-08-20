@@ -61,6 +61,4 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
   },
-  // @ts-ignore
-  trustHost: true,
 };
