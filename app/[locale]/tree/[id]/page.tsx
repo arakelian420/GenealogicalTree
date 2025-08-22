@@ -383,7 +383,9 @@ export default function TreePage() {
               <Link href="/">
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  {t("tree.backToDashboard")}
+                  <span className="hidden sm:inline">
+                    {t("tree.backToDashboard")}
+                  </span>
                 </Button>
               </Link>
               <div>
