@@ -378,7 +378,7 @@ export default function TreePage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link href="/">
                 <Button variant="ghost" size="sm">
@@ -402,31 +402,33 @@ export default function TreePage() {
                   {t("tree.peopleCount", { count: tree.people.length })}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPersonForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t("person.add")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                {t("tree.settings")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                disabled={!tree}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {t("common.save")}
-              </Button>
+              <div className="hidden sm:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPersonForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("person.add")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSettings(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  {t("tree.settings")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={!tree}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {t("common.save")}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -471,6 +473,33 @@ export default function TreePage() {
           </div>
         )}
       </main>
+
+      <div className="sm:hidden fixed bottom-4 right-4 flex flex-col gap-2">
+        <Button
+          size="icon"
+          className="rounded-full h-14 w-14"
+          onClick={() => setShowPersonForm(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="rounded-full h-14 w-14"
+          onClick={() => setShowSettings(true)}
+        >
+          <Settings className="h-6 w-6" />
+        </Button>
+        <Button
+          size="icon"
+          variant="outline"
+          className="rounded-full h-14 w-14"
+          onClick={handleSave}
+          disabled={!tree}
+        >
+          <Save className="h-6 w-6" />
+        </Button>
+      </div>
 
       <PersonForm
         isOpen={showPersonForm}

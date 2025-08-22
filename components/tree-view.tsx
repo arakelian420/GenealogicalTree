@@ -249,7 +249,7 @@ export default function TreeView({
   return (
     <div
       ref={containerRef}
-      className="w-full h-screen print:w-screen print:h-screen user-select-none touch-action-none"
+      className="relative w-full h-screen print:w-screen print:h-screen user-select-none touch-action-none"
     >
       <ReactFlow
         nodes={nodes}
@@ -269,48 +269,21 @@ export default function TreeView({
         multiSelectionKeyCode="Shift"
       >
         <Background />
-        <Controls
-          className="print:hidden flex flex-col space-y-2 bg-white/80 p-2 rounded-lg"
-          showZoom={false}
-          showFitView={false}
-          showInteractive={false}
-        >
-          <ControlButton
-            onClick={() => zoomIn()}
-            title="Zoom In"
-            className="p-2"
-          >
-            <ZoomIn className="w-6 h-6" />
-          </ControlButton>
-          <ControlButton
-            onClick={() => zoomOut()}
-            title="Zoom Out"
-            className="p-2"
-          >
-            <ZoomOut className="w-6 h-6" />
-          </ControlButton>
-          <ControlButton
-            onClick={() => fitView()}
-            title="Fit View"
-            className="p-2"
-          >
-            <Maximize className="w-6 h-6" />
-          </ControlButton>
-          <ControlButton
+        <Controls className="print:hidden" />
+        <div className="absolute top-4 left-4 print:hidden z-10">
+          <Button
+            variant="outline"
+            size="icon"
             onClick={handleToggleLock}
             title={isLocked ? "Unlock" : "Lock"}
-            className="p-2"
           >
             {isLocked ? (
-              <Lock className="w-6 h-6" />
+              <Lock className="h-4 w-4" />
             ) : (
-              <Unlock className="w-6 h-6" />
+              <Unlock className="h-4 w-4" />
             )}
-          </ControlButton>
-          <ControlButton onClick={handlePrint} title="Print" className="p-2">
-            <Printer className="w-6 h-6" />
-          </ControlButton>
-        </Controls>
+          </Button>
+        </div>
         <MiniMap className="print:hidden" />
       </ReactFlow>
 
