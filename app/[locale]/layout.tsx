@@ -44,7 +44,7 @@ export default async function RootLayout({
           locale={locale}
           formats={formats}
         >
-          <div className="absolute top-4 right-4">
+          <div className="absolute top left">
             <LocaleSwitcher />
           </div>
           {children}
