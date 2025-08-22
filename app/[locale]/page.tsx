@@ -134,17 +134,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <TreePine className="h-8 w-8 text-green-600" />
-              <h1 className="text-4xl font-bold text-gray-900">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                 {t("home.title")}
               </h1>
             </div>
             <p className="text-lg text-gray-600">{t("home.subtitle")}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
             <p className="text-sm text-gray-700">
               {t("home.signedInAs")} <strong>{session?.user?.email}</strong>
             </p>

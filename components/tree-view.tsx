@@ -30,6 +30,16 @@ import {
   Printer,
 } from "lucide-react";
 import "reactflow/dist/style.css";
+
+import { useMedia } from "react-use";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+
 import type {
   Tree,
   Relationship,
@@ -239,7 +249,7 @@ export default function TreeView({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[800px] print:w-screen print:h-screen"
+      className="w-full h-screen print:w-screen print:h-screen user-select-none touch-action-none"
     >
       <ReactFlow
         nodes={nodes}
@@ -260,28 +270,45 @@ export default function TreeView({
       >
         <Background />
         <Controls
-          className="print:hidden flex flex-col space-y-2"
+          className="print:hidden flex flex-col space-y-2 bg-white/80 p-2 rounded-lg"
           showZoom={false}
           showFitView={false}
           showInteractive={false}
         >
-          <ControlButton onClick={() => zoomIn()} title="Zoom In">
-            <ZoomIn />
+          <ControlButton
+            onClick={() => zoomIn()}
+            title="Zoom In"
+            className="p-2"
+          >
+            <ZoomIn className="w-6 h-6" />
           </ControlButton>
-          <ControlButton onClick={() => zoomOut()} title="Zoom Out">
-            <ZoomOut />
+          <ControlButton
+            onClick={() => zoomOut()}
+            title="Zoom Out"
+            className="p-2"
+          >
+            <ZoomOut className="w-6 h-6" />
           </ControlButton>
-          <ControlButton onClick={() => fitView()} title="Fit View">
-            <Maximize />
+          <ControlButton
+            onClick={() => fitView()}
+            title="Fit View"
+            className="p-2"
+          >
+            <Maximize className="w-6 h-6" />
           </ControlButton>
           <ControlButton
             onClick={handleToggleLock}
             title={isLocked ? "Unlock" : "Lock"}
+            className="p-2"
           >
-            {isLocked ? <Lock /> : <Unlock />}
+            {isLocked ? (
+              <Lock className="w-6 h-6" />
+            ) : (
+              <Unlock className="w-6 h-6" />
+            )}
           </ControlButton>
-          <ControlButton onClick={handlePrint} title="Print">
-            <Printer />
+          <ControlButton onClick={handlePrint} title="Print" className="p-2">
+            <Printer className="w-6 h-6" />
           </ControlButton>
         </Controls>
         <MiniMap className="print:hidden" />
@@ -294,93 +321,12 @@ export default function TreeView({
       />
 
       {selectedPerson && (
-        <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg p-6 print:hidden">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Person Details</h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="font-medium">Name:</span>
-                  <p>
-                    {selectedPerson.firstName} {selectedPerson.lastName}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setSelectedPerson(null)}
-              className="p-1 -mt-2 -mr-2 rounded-full hover:bg-gray-200"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="space-y-3">
-            {selectedPerson.birthDate && (
-              <div>
-                <span className="font-medium">Birth Date:</span>
-                <p>{selectedPerson.birthDate}</p>
-              </div>
-            )}
-            {selectedPerson.deathDate && (
-              <div>
-                <span className="font-medium">Death Date:</span>
-                <p>{selectedPerson.deathDate}</p>
-              </div>
-            )}
-            {selectedPerson.birthPlace && (
-              <div>
-                <span className="font-medium">Birth Place:</span>
-                <p>{selectedPerson.birthPlace}</p>
-              </div>
-            )}
-            {selectedPerson.occupation && (
-              <div>
-                <span className="font-medium">Occupation:</span>
-                <p>{selectedPerson.occupation}</p>
-              </div>
-            )}
-            {selectedPerson.notes && (
-              <div>
-                <span className="font-medium">Notes:</span>
-                <p>{selectedPerson.notes}</p>
-              </div>
-            )}
-            {selectedPerson.documents &&
-              selectedPerson.documents.length > 0 && (
-                <div>
-                  <span className="font-medium">Documents:</span>
-                  <ul className="list-disc list-inside">
-                    {selectedPerson.documents.map((doc: Document) => (
-                      <li key={doc.id}>
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline"
-                        >
-                          {doc.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-          </div>
-          <div className="mt-6 space-y-2">
-            <button
-              onClick={() => onEditPerson(selectedPerson)}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Edit Person
-            </button>
-            <button
-              onClick={() => setShowRelationshipManager(true)}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Manage Relationships
-            </button>
-          </div>
-        </div>
+        <PersonDetails
+          person={selectedPerson}
+          onClose={() => setSelectedPerson(null)}
+          onEditPerson={onEditPerson}
+          onManageRelationships={() => setShowRelationshipManager(true)}
+        />
       )}
 
       <RelationshipManager
@@ -453,5 +399,130 @@ export default function TreeView({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function PersonDetails({
+  person,
+  onClose,
+  onEditPerson,
+  onManageRelationships,
+}: {
+  person: Person;
+  onClose: () => void;
+  onEditPerson: (person: Person) => void;
+  onManageRelationships: () => void;
+}): React.ReactElement {
+  const isDesktop = useMedia("(min-width: 768px)");
+
+  const content = (
+    <>
+      <div className="space-y-3">
+        {person.birthDate && (
+          <div>
+            <span className="font-medium">Birth Date:</span>
+            <p>{person.birthDate}</p>
+          </div>
+        )}
+        {person.deathDate && (
+          <div>
+            <span className="font-medium">Death Date:</span>
+            <p>{person.deathDate}</p>
+          </div>
+        )}
+        {person.birthPlace && (
+          <div>
+            <span className="font-medium">Birth Place:</span>
+            <p>{person.birthPlace}</p>
+          </div>
+        )}
+        {person.occupation && (
+          <div>
+            <span className="font-medium">Occupation:</span>
+            <p>{person.occupation}</p>
+          </div>
+        )}
+        {person.notes && (
+          <div>
+            <span className="font-medium">Notes:</span>
+            <p>{person.notes}</p>
+          </div>
+        )}
+        {person.documents && person.documents.length > 0 && (
+          <div>
+            <span className="font-medium">Documents:</span>
+            <ul className="list-disc list-inside">
+              {person.documents.map((doc: Document) => (
+                <li key={doc.id}>
+                  <a
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    {doc.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      <div className="mt-6 space-y-2">
+        <button
+          onClick={() => onEditPerson(person)}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Edit Person
+        </button>
+        <button
+          onClick={onManageRelationships}
+          className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Manage Relationships
+        </button>
+      </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg p-6 print:hidden">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Person Details</h3>
+            <div className="space-y-3">
+              <div>
+                <span className="font-medium">Name:</span>
+                <p>
+                  {person.firstName} {person.lastName}
+                </p>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 -mt-2 -mr-2 rounded-full hover:bg-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Drawer open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>
+            {person.firstName} {person.lastName}
+          </DrawerTitle>
+          <DrawerDescription>Person Details</DrawerDescription>
+        </DrawerHeader>
+        <div className="p-4">{content}</div>
+      </DrawerContent>
+    </Drawer>
   );
 }

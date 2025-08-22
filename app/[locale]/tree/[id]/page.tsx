@@ -61,6 +61,7 @@ export default function TreePage() {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [deletingPerson, setDeletingPerson] = useState<Person | null>(null);
+  const [screenWidth, setScreenWidth] = useState(1024);
 
   const handleDeletePerson = (person: Person) => {
     setDeletingPerson(person);
@@ -112,10 +113,21 @@ export default function TreePage() {
   }, [treeId, fetchTree]);
 
   useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!tree) return;
 
     const NODE_WIDTH = 200;
-    const H_SPACING = 50;
+    const H_SPACING = screenWidth < 768 ? 20 : 50;
     const V_SPACING = 350;
 
     const connectedIds = new Set<string>();
@@ -162,7 +174,7 @@ export default function TreePage() {
       });
       if ((person as Person).x === null || (person as Person).y === null) {
         x += NODE_WIDTH + H_SPACING;
-        if (x > 800) {
+        if (x > screenWidth - NODE_WIDTH) {
           x = 0;
           y += V_SPACING;
         }
