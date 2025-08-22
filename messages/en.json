@@ -19,9 +19,9 @@
     "signOut": "Sign Out"
   },
   "home": {
-    "title": "Family Tree Manager",
-    "signInPrompt": "Please sign in to manage your family trees.",
-    "subtitle": "Create and manage your family genealogy",
+    "title": "Family tree",
+    "signInPrompt": "Please sign in to manage your family trees",
+    "subtitle": "Create and manage your genealogical tree",
     "signedInAs": "Signed in as",
     "yourTrees": "Your Family Trees"
   },

@@ -108,7 +108,7 @@ export default function Dashboard() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <TreePine className="h-12 w-12 text-green-600" />
-            <h1 className="text-5xl font-bold text-gray-900">
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">
               {t("home.title")}
             </h1>
           </div>
@@ -135,8 +135,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
               <TreePine className="h-8 w-8 text-green-600" />
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                 {t("home.title")}
@@ -144,18 +144,24 @@ export default function Dashboard() {
             </div>
             <p className="text-lg text-gray-600">{t("home.subtitle")}</p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
-            <p className="text-sm text-gray-700">
-              {t("home.signedInAs")} <strong>{session?.user?.email}</strong>
+          <div className="flex items-center justify-center gap-2 md:gap-4 md:justify-start">
+            <p className="text-sm text-gray-700 truncate">
+              <span className="hidden sm:inline">{t("home.signedInAs")} </span>
+              <strong>{session?.user?.email}</strong>
             </p>
             {session?.user?.role === "admin" && (
               <Link href="/admin">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="shrink-0">
                   {t("common.adminPanel")}
                 </Button>
               </Link>
             )}
-            <Button onClick={() => signOut()} variant="outline" size="sm">
+            <Button
+              onClick={() => signOut()}
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               {t("common.signOut")}
             </Button>
