@@ -271,7 +271,7 @@ export default function TreePage() {
 
     setNodes(reactFlowNodes);
     setEdges(allEdges);
-  }, [tree, displaySettings, setNodes, setEdges]);
+  }, [tree, displaySettings, screenWidth, setNodes, setEdges]);
 
   const handleUpdatePerson = (updatedPerson: Person) => {
     if (!tree) return;

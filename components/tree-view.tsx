@@ -17,18 +17,8 @@ import ReactFlow, {
   type OnEdgesChange,
   type Connection,
   useReactFlow,
-  ControlButton,
 } from "reactflow";
-import {
-  AlertTriangle,
-  X,
-  Lock,
-  Unlock,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Printer,
-} from "lucide-react";
+import { AlertTriangle, X, Lock, Unlock } from "lucide-react";
 import "reactflow/dist/style.css";
 
 import { useMedia } from "react-use";
@@ -94,7 +84,7 @@ export default function TreeView({
   const [newConnection, setNewConnection] = useState<Connection | null>(null);
   const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
   const [edgeToDelete, setEdgeToDelete] = useState<Edge | null>(null);
-  const { fitView, zoomIn, zoomOut } = useReactFlow();
+  const { fitView } = useReactFlow();
   const [isDeleting, setIsDeleting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -226,13 +216,6 @@ export default function TreeView({
       console.error("Error updating tree lock status:", error);
     }
   };
-
-  const handlePrint = useCallback(() => {
-    fitView({ padding: 0.1 });
-    setTimeout(() => {
-      window.print();
-    }, 100);
-  }, [fitView]);
 
   useEffect(() => {
     const onBeforePrint = () => {
