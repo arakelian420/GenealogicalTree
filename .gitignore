@@ -47,3 +47,11 @@ next-env.d.ts
 public/uploads/*.pdf
 public/uploads/*.jpeg
 public/uploads
+
+
+# Log files
+build-*.log
+
+# Markdown files (exclude README.md)
+*.md
+!README.md
